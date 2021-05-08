@@ -60,20 +60,24 @@ class Server(app.App):
         self.thread_discovery.start()
 
         while True:
-            # Accept connection from clients
-            conn, _ = self.main_socket.accept()
+            try:
+                # Accept connection from clients
+                conn, _ = self.main_socket.accept()
 
-            while True:
-                # Extract request message
-                m = self.receive_from(conn)
-                command, command_type, _, data = util.extract(m)
+                with conn:
+                    while True:
+                        # Extract request message
+                        m = self.receive_from(conn)
+                        command, command_type, _, data = util.extract(m)
 
-                # Do the request
-                t = self.requests[command](command_type, data)
+                        # Do the request
+                        t = self.requests[command](command_type, data)
 
-                # Response
-                response = util.package(t[0], self.status_messages[t[0]], t[1])
-                conn.send(response)
+                        # Response
+                        response = util.package(t[0], self.status_messages[t[0]], t[1])
+                        conn.send(response)
+            except app.ConnectionError as e:
+                print(e)
     
     def test(self, command_type, data):
         return ('000', 'vl' * 1000)

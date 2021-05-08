@@ -4,8 +4,6 @@ import util
 import socket
 import time
 
-class ConnectionError(Exception):
-    pass
 
 class Client(app.App):
     def __init__(self):
@@ -13,7 +11,7 @@ class Client(app.App):
 
         self.main_socket = self.discover_server()
         if self.main_socket is None:
-            raise ConnectionError('Unable to connect to server')
+            raise app.ConnectionError('Unable to connect to server')
     
     def discover_server(self) -> socket.socket:
         """ This function mimics the behavior of a DNS client when it tries to

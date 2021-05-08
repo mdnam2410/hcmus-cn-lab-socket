@@ -2,6 +2,8 @@ import util
 
 import socket
 
+class ConnectionError(Exception):
+    pass
 
 class App:
     """Base class for Client and Server class
@@ -31,6 +33,8 @@ class App:
 
         # Receive the first message
         message = s.recv(self.socket_buffer)
+        if len(message) == 0:
+            raise ConnectionError('Connection closed')
 
         # Investigate the size
         _, _, size, _ = util.extract(message)
