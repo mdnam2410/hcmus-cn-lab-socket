@@ -17,12 +17,14 @@ class Server(app.App):
         # Dictionary to translate status codes to status messages
         self.status_messages = {
             '000': 'OK',
-            '100': 'Username or password not found'
+            '100': 'Username or password not found',
+            '102': 'Username already existed'
         }
 
         self.requests = {
             'test': self.test,
-            'login': self.request_login
+            'login': self.request_login,
+            'signup': self.request_signup
         }
 
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -61,16 +63,17 @@ class Server(app.App):
             # Accept connection from clients
             conn, _ = self.main_socket.accept()
 
-            # Extract request message
-            m = self.receive_from(conn)
-            command, command_type, _, data = util.extract(m)
+            while True:
+                # Extract request message
+                m = self.receive_from(conn)
+                command, command_type, _, data = util.extract(m)
 
-            # Do the request
-            t = self.requests[command](command_type, data)
+                # Do the request
+                t = self.requests[command](command_type, data)
 
-            # Response
-            response = util.package(t[0], self.status_messages[t[0]], t[1])
-            conn.send(response)
+                # Response
+                response = util.package(t[0], self.status_messages[t[0]], t[1])
+                conn.send(response)
     
     def test(self, command_type, data):
         return ('000', 'vl' * 1000)
@@ -79,8 +82,15 @@ class Server(app.App):
         username, password = data.split(',', 1)
         result = self.db.authenticate(username, password)
         if len(result) == 1:
-            return ('000', f'{username},{password},{result[0][2]}')
+            return ('000', f'{username},{password},{result[0][1]}')
         return ('100', '')
+    
+    def request_signup(self, command_type, data):
+        username, password, name = data.split(',', 2)
+        result = self.db.sign_up(username, password, name)
+        if result:
+            return ('000', '')
+        return ('102', '')
 
 s = Server()
 s.run()

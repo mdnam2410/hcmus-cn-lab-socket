@@ -66,10 +66,34 @@ class Client(app.App):
         self.password = input('Password: ')
         self.send(util.package('login', '', f'{self.username},{self.password}'))
         status_code, status_message, *_ = util.extract(self.receive())
-        if status_code == 0:
+        if status_code == '000':
             print('Logged in')
         else:
             print('Error:', status_message)
 
+    def signup(self):
+        command = 'signup'
+        command_type = ''
+
+        self.username = input('Username: ')
+        self.password = input('Password: ')
+        self.name = input('Name: ')
+        retype_password = input('Retype password: ')
+
+        if self.password != retype_password:
+            print('Unmatched password')
+            return
+        else:
+            data = self.username + ',' + self.password + ',' + self.name
+
+        self.send(util.package(command, command_type, data))
+        status_code, status_message, _, _ = util.extract(self.receive())
+        if status_code == '000':
+            print('Sign up succeeded.')
+        else:
+            print(status_message)
+        
+
+
 client = Client()
-client.login()
+client.signup()
