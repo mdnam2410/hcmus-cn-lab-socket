@@ -22,7 +22,7 @@ def response_to_discovery_request():
         util.print_message(message)
 
         # Verify the discovery message
-        command, _, _ = util.extract(message)
+        command, *_ = util.extract(message)
         if command == 'discover':
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             s.sendto(
@@ -33,7 +33,8 @@ def response_to_discovery_request():
 class Server:
     def __init__(self):
         self.serving_functions = {
-            'login': self.command_login
+            'login': self.command_login,
+            'kuso': self.kuso
         }
 
         self.status_messages = {
@@ -54,10 +55,10 @@ class Server:
         while True:
             c, _ = self.server_socket.accept()
             m = c.recv(1024)
-            command, option, data = util.extract(m)
+            command, option, _, data = util.extract(m)
             t = self.serving_functions[command](option, data)
             reply = util.package(t[0], self.status_messages[t[0]], t[1])
-            util.print_message(reply)
+            # util.print_message(reply)
             c.send(reply)
         
     def command_login(self, option, data):
@@ -66,6 +67,9 @@ class Server:
         if len(result) == 1:
             return ('000', f'{username},{password},{result[0][2]}')
         return ('100', '')
+
+    def kuso(self, command_type, data):
+        return ('000', 'kusotare' * 1024)
 
 
 server = Server()
