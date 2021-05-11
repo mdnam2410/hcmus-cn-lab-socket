@@ -24,15 +24,19 @@ class Server(app.App):
         self.requests = {
             'test': self.test,
             'login': self.request_login,
-            'signup': self.request_signup
+            'signup': self.request_signup,
+            'logout': self.request_logout
         }
+
+        # List of signed in users
+        self.current_user = dict()
 
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.main_socket.bind((self.SERVER_ADDRESS, self.SERVER_PORT))
 
         # Background thread that listens and responses to discovery requests from remote clients
         self.thread_discovery = threading.Thread(target=self.response_to_discovery_request, daemon=True)
-    
+
     def response_to_discovery_request(self):
         """This function listens for remote client discovery message and responses
         with the server address"""
@@ -54,7 +58,7 @@ class Server(app.App):
                     util.package('000', '', self.SERVER_ADDRESS),
                     ('255.255.255.255', client_connection[1])
                 )
-    
+
     def run(self):
         self.main_socket.listen()
         self.thread_discovery.start()
@@ -78,7 +82,7 @@ class Server(app.App):
                         conn.send(response)
             except app.ConnectionError as e:
                 print(e)
-    
+
     def test(self, command_type, data):
         return ('000', 'vl' * 1000)
 
@@ -86,15 +90,25 @@ class Server(app.App):
         username, password = data.split(',', 1)
         result = self.db.authenticate(username, password)
         if len(result) == 1:
+            # TODO: Add timestamp for user login time
+            self.current_user[username] = ''
             return ('000', f'{username},{password},{result[0][1]}')
         return ('100', '')
-    
+
     def request_signup(self, command_type, data):
         username, password, name = data.split(',', 2)
         result = self.db.sign_up(username, password, name)
         if result:
             return ('000', '')
         return ('102', '')
+
+    def request_logout(self, command_type, data):
+        r = self.current_user.pop(data, default=None)
+        # User is not currently logged in
+        if r is None:
+            return ('103', '')
+        else:
+            return ('000', '')
 
 s = Server()
 s.run()
