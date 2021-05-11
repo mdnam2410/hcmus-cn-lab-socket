@@ -18,7 +18,7 @@ class Server(app.App):
         self.status_messages = {
             '000': 'OK',
             '100': 'Username or password not found',
-            '102': 'Username already existed'
+            '102': 'Username already existed',
         }
 
         self.requests = {
@@ -103,9 +103,10 @@ class Server(app.App):
         return ('102', '')
 
     def request_logout(self, command_type, data):
-        r = self.current_user.pop(data, default=None)
+        r = self.current_user.pop(data, None)
         # User is not currently logged in
         if r is None:
+            # TODO: Determine status code
             return ('103', '')
         else:
             return ('000', '')
