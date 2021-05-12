@@ -124,11 +124,27 @@ class Server(app.App):
     def test(self, command_type, data):
         return ('000', 'vl' * 1000)
 
+    def logged_in(self, username) -> bool:
+        """Check if the username has already logged in (in the current thread or other thread)
+
+        Returns
+        -------
+        bool
+            True if the client has already logged in, False otherwise
+        """
+        for v in self.clients.values():
+            if username in v:
+                return True
+        return False
+
     def request_login(self, command_type, data):
         status_code = ''
         result = ''
 
         username, password = data.split(',', 1)
+        if self.logged_in(username):
+            # TODO: Determine status code for user that logged in twice
+            return ('104', '')
 
         with database.Database(self.DATABASE_PATH) as db:
             user_info = db.authenticate(username, password)
