@@ -63,9 +63,10 @@ class Client(app.App):
         self.username = input('Username: ')
         self.password = input('Password: ')
         self.send(util.package('login', '', f'{self.username},{self.password}'))
-        status_code, status_message, *_ = util.extract(self.receive())
+        status_code, status_message, _, data = util.extract(self.receive())
         if status_code == '000':
             print('Logged in')
+            print(data)
         else:
             print('Error:', status_message)
 
@@ -105,4 +106,4 @@ class Client(app.App):
 
 if __name__ == '__main__':
     client = Client()
-    client.signup()
+    client.login()

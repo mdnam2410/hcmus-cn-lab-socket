@@ -88,11 +88,22 @@ class Server(app.App):
 
     def request_login(self, command_type, data):
         username, password = data.split(',', 1)
-        result = self.db.authenticate(username, password)
-        if len(result) == 1:
+        user_info = self.db.authenticate(username, password)
+
+        if len(user_info) == 1:
             # TODO: Add timestamp for user login time
             self.current_user[username] = ''
-            return ('000', f'{username},{password},{result[0][1]}')
+
+            # Get today's weather by default
+            today_weather = self.db.today_weather()
+            num_city = len(today_weather)
+
+            # Pack everything into the data field
+            result = f'{username},{user_info[0][1]}\n' + str(num_city) + '\n'
+            for city in today_weather:
+                result += ','.join([str(x) for x in city]) + '\n'
+            return ('000', result)
+        
         return ('100', '')
 
     def request_signup(self, command_type, data):
