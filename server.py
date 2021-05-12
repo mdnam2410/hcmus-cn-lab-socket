@@ -135,7 +135,17 @@ class Server(app.App):
             for city in r:
                 result += ','.join([str(x) for x in city]) + '\n'
             status_code = '000'
+        
+        elif command_type == 'weather':
+            # data contains the date in YYYY-MM-DD format
+            r = self.db.weather_by_date(data)
+            num_city = len(r)
 
+            result = str(num_city) + '\n'
+            for city in r:
+                result += ','.join([str(x) for x in city]) + '\n'
+            status_code = '000'
+        
         return (status_code, result)
     
 s = Server()

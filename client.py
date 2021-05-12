@@ -1,3 +1,4 @@
+from datetime import date
 import app
 import util
 
@@ -119,7 +120,26 @@ class Client(app.App):
                 print(city)
         else:
             print(status_message)
+    
+    def query_weather_by_day(self):
+        command = 'query'
+        command_type = 'weather'
+        day = input('Enter day in YYYY-MM-DD format: ')
+
+        if not util.validate_iso_date_format(day):
+            print('Date not in correct format')
+            return
+        
+        self.send(util.package(command, command_type, day))
+        status_code, status_message, _, data = util.extract(self.receive())
+
+        if status_code == '000':
+            num_city, cities = data.split('\n', 1)
+            print(f'Number of cities: {num_city}')
+            print(cities)
+        else:
+            print(status_message)
 
 if __name__ == '__main__':
     client = Client()
-    client.search()
+    client.query_weather_by_day()

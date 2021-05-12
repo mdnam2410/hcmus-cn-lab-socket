@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 
 def extract(message: bytes) -> tuple:
@@ -22,3 +23,22 @@ def package(field1: str, field2: str, data: str) -> bytes:
 def print_message(message: bytes):
     print(message.decode('utf-8'))
 
+def validate_iso_date_format(date):
+    """Validate if a given string is in YYYY-MM-DD format
+
+    Parameters
+    ----------
+    date : str
+
+    Returns
+    -------
+    bool
+        True if successful, False otherwise
+    """
+
+    try:
+        datetime.date.fromisoformat(date)
+        return True
+    except Exception:
+        return False
+    
