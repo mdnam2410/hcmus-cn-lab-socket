@@ -139,7 +139,24 @@ class Client(app.App):
             print(cities)
         else:
             print(status_message)
+    
+    def forecast(self):
+        command = 'query'
+        command_type = 'forecast'
+        city_id = input('Enter city id: ')
 
+        self.send(util.package(command, command_type, city_id))
+        status_code, status_message, _, data = util.extract(self.receive())
+
+        if status_code == '000':
+            num_result, weather_info = data.split('\n', 1)
+            print(f'Available forecast for {num_result} days')
+            for weather in weather_info.splitlines():
+                print(weather)
+        else:
+            print(status_message)
+        
 if __name__ == '__main__':
     client = Client()
-    client.query_weather_by_day()
+    client.search()
+    client.forecast()

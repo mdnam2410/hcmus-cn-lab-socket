@@ -146,6 +146,16 @@ class Server(app.App):
                 result += ','.join([str(x) for x in city]) + '\n'
             status_code = '000'
         
+        elif command_type == 'forecast':
+            # data contains the city id
+            r = self.db.forecast(int(data))
+            num_result = len(r)
+
+            result = str(num_result) + '\n'
+            for entry in r:
+                result += ','.join([str(x) for x in entry]) + '\n'
+            status_code = '000'
+        
         return (status_code, result)
     
 s = Server()
