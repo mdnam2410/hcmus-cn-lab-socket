@@ -21,6 +21,15 @@ class Database:
     def __del__(self):
         self.con.close()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if type is not None:
+            self.con.commit()
+        else:
+            self.con.rollback()
+
     def execute_query(self, query):
         self.cur.execute(query)
         return self.cur.fetchall()

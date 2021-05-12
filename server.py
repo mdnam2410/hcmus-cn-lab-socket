@@ -2,6 +2,7 @@ import app
 import database
 import util
 
+import datetime
 import socket
 import threading
 
@@ -9,10 +10,12 @@ class Server(app.App):
     def __init__(self):
         super().__init__()
 
+        self.DATABASE_PATH = 'db/wether.db'
         self.SERVER_ADDRESS = socket.gethostbyname(socket.gethostname())
+        self.MAX_CLIENT_THREAD = 2
 
         # Main database
-        self.db = database.Database('db/wether.db')
+        # self.db = database.Database('db/wether.db')
 
         # Dictionary to translate status codes to status messages
         self.status_messages = {
@@ -29,8 +32,8 @@ class Server(app.App):
             'query': self.request_query
         }
 
-        # List of signed in users
-        self.current_user = dict()
+        # List of clients
+        self.clients = dict()
 
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.main_socket.bind((self.SERVER_ADDRESS, self.SERVER_PORT))
@@ -65,96 +68,142 @@ class Server(app.App):
         self.thread_discovery.start()
 
         while True:
-            try:
-                # Accept connection from clients
-                conn, _ = self.main_socket.accept()
+            # Accept connection from clients
+            conn, _ = self.main_socket.accept()
 
-                with conn:
-                    while True:
-                        # Extract request message
-                        m = self.receive_from(conn)
-                        command, command_type, _, data = util.extract(m)
+            if len(self.clients) == self.MAX_CLIENT_THREAD:
+                print('Reached maximum client')
+            
+            # Still open a thread tho
+            # TODO: Send back to the client that maximum number of threads has been reached
 
-                        # Do the request
-                        t = self.requests[command](command_type, data)
+            # Start a thread for the accepted client
+            thread = threading.Thread(target=self.serve, args=(conn,))
+            thread.start()
+            # thread.join()
 
-                        # Response
-                        response = util.package(t[0], self.status_messages[t[0]], t[1])
-                        conn.send(response)
-            except app.ConnectionError as e:
-                print(e)
+            # Initialize the user identification associated with the thread
+            self.clients[thread.ident] = ('', '', '')
+
+    def serve(self, conn: socket.socket):
+        """Target function for threads that communicate with client
+        
+        Parameters
+        ----------
+        conn : socket.socket
+            The TCP socket that is communicating with the client
+        
+        Returns
+        -------
+        None
+        """
+        
+        try:
+            with conn:
+                while True:
+                    # Extract request message
+                    m = self.receive_from(conn)
+                    command, command_type, _, data = util.extract(m)
+
+                    # Do the request
+                    t = self.requests[command](command_type, data)
+
+                    # Inspect the clients
+                    print(self.clients)
+
+                    # Response
+                    response = util.package(t[0], self.status_messages[t[0]], t[1])
+                    conn.send(response)
+        except app.ConnectionError as e:
+            print(e)
+
+            # Remove the thread
+            self.clients.pop(threading.current_thread().ident)
+        
 
     def test(self, command_type, data):
         return ('000', 'vl' * 1000)
 
     def request_login(self, command_type, data):
+        status_code = ''
+        result = ''
+
         username, password = data.split(',', 1)
-        user_info = self.db.authenticate(username, password)
 
-        if len(user_info) == 1:
-            # TODO: Add timestamp for user login time
-            self.current_user[username] = ''
+        with database.Database(self.DATABASE_PATH) as db:
+            user_info = db.authenticate(username, password)
 
-            # Get today's weather by default
-            today_weather = self.db.today_weather()
-            num_city = len(today_weather)
+            if len(user_info) == 1:
+                # Record user login time
+                self.clients[threading.current_thread().ident] = (username, 'ordinary', datetime.datetime.now())
 
-            # Pack everything into the data field
-            result = f'{username},{user_info[0][1]}\n' + str(num_city) + '\n'
-            for city in today_weather:
-                result += ','.join([str(x) for x in city]) + '\n'
-            return ('000', result)
-        
-        return ('100', '')
+                # Get today's weather by default
+                today_weather = db.today_weather()
+                num_city = len(today_weather)
+
+                # Pack everything into the data field
+                result = f'{username},{user_info[0][1]}\n' + str(num_city) + '\n'
+                for city in today_weather:
+                    result += ','.join([str(x) for x in city]) + '\n'
+                
+                status_code = '000'
+            else:
+                status_code = '100'
+        return (status_code, result)
 
     def request_signup(self, command_type, data):
         username, password, name = data.split(',', 2)
-        result = self.db.sign_up(username, password, name)
-        if result:
-            return ('000', '')
-        return ('102', '')
+        with database.Database(self.DATABASE_PATH) as db:
+            result = db.sign_up(username, password, name)
+            if result:
+                return ('000', '')
+            return ('102', '')
 
     def request_logout(self, command_type, data):
-        r = self.current_user.pop(data, None)
+        # Get user info corresponding to the thread
+        r = self.clients[threading.current_thread().ident]
+
         # User is not currently logged in
-        if r is None:
+        if r == ('', '', ''):
             # TODO: Determine status code
             return ('103', '')
         else:
+            self.clients[threading.current_thread().ident] = ('', '', '')
             return ('000', '')
 
     def request_query(self, command_type, data):
         status_code = ''
         result = ''
-        if command_type == 'city':
-            # data contains the keyword to search
-            r = self.db.search_city(data)
-            num_city = len(r)
+        with database.Database(self.DATABASE_PATH) as db:
+            if command_type == 'city':
+                # data contains the keyword to search
+                r = db.search_city(data)
+                num_city = len(r)
 
-            result = str(num_city) + '\n'
-            for city in r:
-                result += ','.join([str(x) for x in city]) + '\n'
-            status_code = '000'
-        
-        elif command_type == 'weather':
-            # data contains the date in YYYY-MM-DD format
-            r = self.db.weather_by_date(data)
-            num_city = len(r)
+                result = str(num_city) + '\n'
+                for city in r:
+                    result += ','.join([str(x) for x in city]) + '\n'
+                status_code = '000'
+            
+            elif command_type == 'weather':
+                # data contains the date in YYYY-MM-DD format
+                r = db.weather_by_date(data)
+                num_city = len(r)
 
-            result = str(num_city) + '\n'
-            for city in r:
-                result += ','.join([str(x) for x in city]) + '\n'
-            status_code = '000'
-        
-        elif command_type == 'forecast':
-            # data contains the city id
-            r = self.db.forecast(int(data))
-            num_result = len(r)
+                result = str(num_city) + '\n'
+                for city in r:
+                    result += ','.join([str(x) for x in city]) + '\n'
+                status_code = '000'
+            
+            elif command_type == 'forecast':
+                # data contains the city id
+                r = db.forecast(int(data))
+                num_result = len(r)
 
-            result = str(num_result) + '\n'
-            for entry in r:
-                result += ','.join([str(x) for x in entry]) + '\n'
-            status_code = '000'
+                result = str(num_result) + '\n'
+                for entry in r:
+                    result += ','.join([str(x) for x in entry]) + '\n'
+                status_code = '000'
         
         return (status_code, result)
     
