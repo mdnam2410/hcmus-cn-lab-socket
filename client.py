@@ -103,7 +103,23 @@ class Client(app.App):
             print('Logged out successfully')
         else:
             print(status_message)
+    
+    def search(self):
+        command = 'query'
+        command_type = 'city'
+        keyword = input('Enter city name: ')
+
+        self.send(util.package(command, command_type, keyword))
+        status_code, status_message, _, data = util.extract(self.receive())
+
+        if status_code == '000':
+            num_city, result = data.split('\n', 1)
+            print(f'Found {num_city} matches')
+            for city in result.splitlines():
+                print(city)
+        else:
+            print(status_message)
 
 if __name__ == '__main__':
     client = Client()
-    client.login()
+    client.search()

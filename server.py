@@ -25,7 +25,8 @@ class Server(app.App):
             'test': self.test,
             'login': self.request_login,
             'signup': self.request_signup,
-            'logout': self.request_logout
+            'logout': self.request_logout,
+            'query': self.request_query
         }
 
         # List of signed in users
@@ -122,5 +123,20 @@ class Server(app.App):
         else:
             return ('000', '')
 
+    def request_query(self, command_type, data):
+        status_code = ''
+        result = ''
+        if command_type == 'city':
+            # data contains the keyword to search
+            r = self.db.search_city(data)
+            num_city = len(r)
+
+            result = str(num_city) + '\n'
+            for city in r:
+                result += ','.join([str(x) for x in city]) + '\n'
+            status_code = '000'
+
+        return (status_code, result)
+    
 s = Server()
 s.run()
