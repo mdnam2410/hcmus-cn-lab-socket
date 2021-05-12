@@ -35,6 +35,9 @@ class Server(app.App):
         # List of clients
         self.clients = dict()
 
+        # Flag to signal the threads that the server is going down
+        self.system_on = True
+
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.main_socket.bind((self.SERVER_ADDRESS, self.SERVER_PORT))
 
@@ -64,26 +67,30 @@ class Server(app.App):
                 )
 
     def run(self):
-        self.main_socket.listen()
         self.thread_discovery.start()
 
-        while True:
-            # Accept connection from clients
-            conn, _ = self.main_socket.accept()
+        with self.main_socket:
+            self.main_socket.listen()
+            try:
+                while True:
+                    # Accept connection from clients
+                    conn, _ = self.main_socket.accept()
 
-            if len(self.clients) == self.MAX_CLIENT_THREAD:
-                print('Reached maximum client')
-            
-            # Still open a thread tho
-            # TODO: Send back to the client that maximum number of threads has been reached
+                    if len(self.clients) == self.MAX_CLIENT_THREAD:
+                        print('Reached maximum client')
+                    
+                    # Still open a thread tho
+                    # TODO: Send back to the client that maximum number of threads has been reached
 
-            # Start a thread for the accepted client
-            thread = threading.Thread(target=self.serve, args=(conn,))
-            thread.start()
-            # thread.join()
+                    # Start a thread for the accepted client
+                    thread = threading.Thread(target=self.serve, args=(conn,))
+                    thread.start()
+                    # thread.join()
 
-            # Initialize the user identification associated with the thread
-            self.clients[thread.ident] = ('', '', '')
+                    # Initialize the user identification associated with the thread
+                    self.clients[thread.ident] = ('', '', '')
+            except Exception:
+                self.system_on = False
 
     def serve(self, conn: socket.socket):
         """Target function for threads that communicate with client
@@ -100,7 +107,7 @@ class Server(app.App):
         
         try:
             with conn:
-                while True:
+                while self.system_on:
                     # Extract request message
                     m = self.receive_from(conn)
                     command, command_type, _, data = util.extract(m)
@@ -222,6 +229,6 @@ class Server(app.App):
                 status_code = '000'
         
         return (status_code, result)
-    
+
 s = Server()
 s.run()
