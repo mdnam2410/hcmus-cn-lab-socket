@@ -190,3 +190,14 @@ Note:
 * `n`: An integer (0 &le; `n` &le; 7).
 * `<weather info>`: A comma-separated list of `<date>,<min degree>,<max degree>,<precipitation>`.
   * `<date>`: YYYY-MM-DD format.
+
+# Status codes
+
+Status code | Functionality | Status message | Description
+---------- | ------------- | -------------- | -----------
+`000` | general error | OK | Request completed successfully
+`001` | general error | Reached maximum clients | The server has reached the maximum number of clients it can serve
+`100` | login | Incorrect username or password | Failed to authenticate the user
+`101` | login | Already logged in | The user already logged in on another device
+`102` | signup | Username existed | Sign up with an existed username
+`103` | logout | Already logged out | Already logged out
