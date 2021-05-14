@@ -170,16 +170,7 @@ class Server(app.App):
             if len(user_info) == 1:
                 # Record user login time
                 self.clients[threading.current_thread().ident] = (username, 'ordinary', datetime.datetime.now())
-
-                # Get today's weather by default
-                today_weather = db.today_weather()
-                num_city = len(today_weather)
-
-                # Pack everything into the data field
-                result = f'{username},{user_info[0][1]}\n' + str(num_city) + '\n'
-                for city in today_weather:
-                    result += ','.join([str(x) for x in city]) + '\n'
-                
+                result = f'{username},{user_info[0][1]}\n'                
                 status_code = '000'
             else:
                 status_code = '100'
