@@ -20,8 +20,11 @@ class Server(app.App):
         # Dictionary to translate status codes to status messages
         self.status_messages = {
             '000': 'OK',
+            '001': 'Reached maximum client',
             '100': 'Username or password not found',
+            '101': 'Already logged in',
             '102': 'Username already existed',
+            '103': 'Already logged out',
         }
 
         self.requests = {
@@ -76,8 +79,17 @@ class Server(app.App):
                     # Accept connection from clients
                     conn, _ = self.main_socket.accept()
 
+                    # Reached maximum connection allowed
                     if len(self.clients) == self.MAX_CLIENT_THREAD:
-                        print('Reached maximum client')
+                        # Notify the client that the maximum has reached
+                        conn.send(util.package('001', self.status_messages['001'], ''))
+
+                        # Close the connection
+                        conn.close()
+                        continue
+                    else:
+                        # It's OK
+                        conn.send(util.package('000', '', ''))
                     
                     # Still open a thread tho
                     # TODO: Send back to the client that maximum number of threads has been reached
@@ -150,8 +162,7 @@ class Server(app.App):
 
         username, password = data.split(',', 1)
         if self.logged_in(username):
-            # TODO: Determine status code for user that logged in twice
-            return ('104', '')
+            return ('101', '')
 
         with database.Database(self.DATABASE_PATH) as db:
             user_info = db.authenticate(username, password)
@@ -188,7 +199,6 @@ class Server(app.App):
 
         # User is not currently logged in
         if r == ('', '', ''):
-            # TODO: Determine status code
             return ('103', '')
         else:
             self.clients[threading.current_thread().ident] = ('', '', '')

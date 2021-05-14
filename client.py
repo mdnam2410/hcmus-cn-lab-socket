@@ -13,6 +13,12 @@ class Client(app.App):
         self.main_socket = self.discover_server()
         if self.main_socket is None:
             raise app.ConnectionError('Unable to connect to server')
+        
+        # Check if the maximum number of clients the server can serve is reached
+        status_code, status_message, _, _ = util.extract(self.receive())
+        if status_code != '000':
+            self.main_socket.close()
+            raise app.ConnectionError(status_message)
 
     def discover_server(self) -> socket.socket:
         """ This function mimics the behavior of a DNS client when it tries to
