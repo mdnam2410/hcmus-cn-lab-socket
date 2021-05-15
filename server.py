@@ -25,7 +25,9 @@ class Server(app.App):
             '101': 'Already logged in',
             '102': 'Username already existed',
             '103': 'Already logged out',
-            '104': 'Not admin'
+            '104': 'Not admin',
+            '300': 'Permission denied',
+            '301': 'Error in adding city'
         }
 
         self.requests = {
@@ -33,7 +35,8 @@ class Server(app.App):
             'login': self.request_login,
             'signup': self.request_signup,
             'logout': self.request_logout,
-            'query': self.request_query
+            'query': self.request_query,
+            'update': self.request_update
         }
 
         # List of clients
@@ -41,6 +44,9 @@ class Server(app.App):
 
         # Flag to signal the threads that the server is going down
         self.system_on = True
+
+        # Lock
+        self.lock = threading.Lock()
 
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.main_socket.bind((self.SERVER_ADDRESS, self.SERVER_PORT))
@@ -241,6 +247,21 @@ class Server(app.App):
                 status_code = '000'
         
         return (status_code, result)
+
+    def request_update(self, command_type, data):
+        # Check user's priviledge
+        if self.clients[threading.current_thread().ident][1] != 'admin':
+            return ('300', '')
+
+        status_code = ''
+        result = ''
+        with self.lock:
+            with database.Database(self.DATABASE_PATH) as db:
+                if command_type == 'city':
+                    status_code = '000' if db.add_city(data) else '301'
+
+        return (status_code, result)
+
 
 s = Server()
 s.run()

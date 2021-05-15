@@ -172,7 +172,26 @@ class Client(app.App):
                 print(weather)
         else:
             print(status_message)
+
+    def add_city(self):
+        command = 'update'
+        command_type = 'city'
+
+        city_id = input('City ID: ')
+        city_name = input('City name: ')
+        country_code = input('Country code: ')
+        lat = float(input('Latitude: '))
+        lon = float(input('Longitude: '))
+
+        data = ','.join([city_id, city_name, country_code, str(lat), str(lon)])
+        self.send(util.package(command, command_type, data))
+        status_code, status_message, *_ = util.extract(self.receive())
+        if status_code == '000':
+            print('OK')
+        else:
+            print(status_message)
         
 if __name__ == '__main__':
     client = Client()
-    client.login_admin()
+    client.login()
+    client.add_city()
