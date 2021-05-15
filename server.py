@@ -25,6 +25,7 @@ class Server(app.App):
             '101': 'Already logged in',
             '102': 'Username already existed',
             '103': 'Already logged out',
+            '104': 'Not admin'
         }
 
         self.requests = {
@@ -155,7 +156,7 @@ class Server(app.App):
             if username in v:
                 return True
         return False
-
+    
     def request_login(self, command_type, data):
         status_code = ''
         result = ''
@@ -165,11 +166,21 @@ class Server(app.App):
             return ('101', '')
 
         with database.Database(self.DATABASE_PATH) as db:
+            admin = False
+            if command_type == 'admin':
+                admin = True
+                if len(username) != 3 or not username.isnumeric():
+                    return ('104', '')
+
             user_info = db.authenticate(username, password)
 
             if len(user_info) == 1:
                 # Record user login time
-                self.clients[threading.current_thread().ident] = (username, 'ordinary', datetime.datetime.now())
+                self.clients[threading.current_thread().ident] = (
+                    username,
+                    'admin' if admin else 'ordinary',
+                    datetime.datetime.now()
+                )
                 result = f'{username},{user_info[0][1]}\n'                
                 status_code = '000'
             else:

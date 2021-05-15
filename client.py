@@ -76,6 +76,17 @@ class Client(app.App):
             print(data)
         else:
             print('Error:', status_message)
+    
+    def login_admin(self):
+        self.username = input('Username: ')
+        self.password = input('Password: ')
+        self.send(util.package('login', 'admin', f'{self.username},{self.password}'))
+        status_code, status_message, _, data = util.extract(self.receive())
+        if status_code == '000':
+            print('Logged in')
+            print(data)
+        else:
+            print('Error:', status_message)
 
     def signup(self):
         command = 'signup'
@@ -164,5 +175,4 @@ class Client(app.App):
         
 if __name__ == '__main__':
     client = Client()
-    client.login()
-    client.search()
+    client.login_admin()
