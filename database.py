@@ -15,6 +15,7 @@ class Database:
             self.con = sqlite3.connect(database_path)
             self.con.row_factory = sqlite3.Row
             self.cur = self.con.cursor()
+            self.cur.execute('PRAGMA foreign_keys = 1')
         except sqlite3.Error:
             raise DatabaseConnectionError(f'Cannot connect to {database_path}')
     
@@ -215,7 +216,36 @@ class Database:
         self.cur.execute(query, (name,))
         return self.cur.fetchall()
 
+    def add_city(self, city_info):
+        """Insert a new city
+
+        Parameters
+        ----------
+        city_info : tuple
+            A 5-tuple of (city_id, city_name, country_code, lat, lon)
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise
+        """
+
+        query = '''
+        INSERT INTO city VALUES (?, ?, ?, ?, ?);
+        '''
+        try:
+            self.cur.execute(query, city_info)
+            self.con.commit()
+            return True
+        except sqlite3.DatabaseError:
+            return False
 
 if __name__ == '__main__':
-    db = Database('db/wether.db')
+    with Database('db/wether.db') as db:
+        city_id = input('City ID: ')
+        city_name = input('City name: ')
+        country_code = input('Country code: ')
+        lat = float(input('Latitude: '))
+        lon = float(input('Longitude: '))
 
+        print('OK' if db.add_city((city_id, city_name, country_code, lat, lon)) else 'Not OK')
