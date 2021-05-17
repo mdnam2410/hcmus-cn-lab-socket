@@ -242,5 +242,18 @@ class Server(app.App):
         
         return (status_code, result)
 
+    def request_update(self, command_type, data):
+
+        # Not admin
+        if self.clients[threading.current_thread().ident][1] != 'admin':
+            return ('300', '')
+        
+        status_code = ''
+        result = ''
+        with database.Database(self.DATABASE_PATH) as db:
+            if command_type == 'city':
+                status_code = '000' if db.add_city(data) else '301'
+        return (status_code, result)
+
 s = Server()
 s.run()
