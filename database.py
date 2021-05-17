@@ -240,6 +240,37 @@ class Database:
         except sqlite3.DatabaseError:
             return False
 
+    def update_weather_by_city(self, city_id, weather_info):
+        """Update the weather information of a given city
+
+        Parameters
+        ----------
+        city_id : int
+        weather_info : tuple
+            A 5-tuple of (day, weather_id, min_degree, max_degree, precipitation)
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise
+        """
+        
+        query = '''
+        UPDATE city_weather
+        SET report_date = ?, weather_id = ?, min_degree = ?, max_degree = ?, precipitation = ?
+        WHERE city_id = ?;
+        '''
+        
+        t = [x for x in weather_info]
+        t.append(city_id)
+        pack = tuple(t)
+        try:
+            self.cur.execute(query, parameters=pack)
+            self.cur.commit()
+            return True
+        except sqlite3.DatabaseError:
+            return False
+
 if __name__ == '__main__':
     with Database('db/wether.db') as db:
         city_id = input('City ID: ')
