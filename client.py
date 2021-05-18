@@ -1,14 +1,15 @@
 from datetime import date
 import app
+import login
 import util
 
 import socket
-import time
-
+import tkinter as tk
 
 class Client(app.App):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, root):
+        app.App.__init__(self)
+        self.root = root
 
         self.main_socket = self.discover_server()
         if self.main_socket is None:
@@ -19,6 +20,111 @@ class Client(app.App):
         if status_code != '000':
             self.main_socket.close()
             raise app.ConnectionError(status_message)
+
+        self.username = ''
+        self.name = ''
+
+        self.create_login_window()
+        
+    def create_login_window(self):
+        # Create the login window
+        self.window_login = tk.Toplevel(master=self.root)
+
+        # Create the layout
+        self.frame_login = login.Login(self.window_login)
+
+        # Bind commands
+        self.frame_login.button_login.configure(command=self.command_wlogin_button_login)
+        self.frame_login.label_adminlogin.bind('<Button-1>', self.command_wlogin_label_adminlogin)
+        self.frame_login.label_signup.bind('<Button-1>', self.command_wlogin_label_signup)
+
+        # Bind the delete window protocol
+        self.window_login.protocol('WM_DELETE_WINDOW', self.wlogin_onclosing)
+
+        # Display
+        self.frame_login.pack()
+
+
+    # Widgets' commands
+
+    def wlogin_onclosing(self):
+        self.window_login.destroy()
+        self.root.destroy()
+
+    def command_wlogin_button_login(self):
+        """Action taken when user hits the "Login" button in the login window
+        """
+
+        u, p = self.frame_login.var_username.get(), self.frame_login.var_password.get()
+        result = self.login(u, p) if self.frame_login.login_option == 'ordinary' else self.login_admin(u, p)
+        if type(result) is tuple:
+            self.frame_login.var_prompt.set(result[1])
+            return
+        self.window_login.destroy()
+        self.root.deiconify()
+
+    def command_wlogin_label_adminlogin(self, event):
+        if self.frame_login.login_option == 'ordinary':
+            self.frame_login.var_login_button_text.set('Log in as admin')
+            self.frame_login.login_option = 'admin'
+            self.frame_login.label_adminlogin.configure(text='Log in as ordinary user')
+        else:
+            self.frame_login.var_login_button_text.set('Log in')
+            self.frame_login.login_option = 'ordinary'
+            self.frame_login.label_adminlogin.configure(text='Log in as admin')
+
+    def command_wlogin_label_signup(self, event):
+        """Action taken when user clicks the "Sign up" label
+
+        Parameters
+        ----------
+        event : Any
+            Unused
+        """
+        # Hide the login window
+        self.window_login.withdraw()
+
+        # Create the sign up window
+        self.window_signup = tk.Toplevel(master=self.root)
+
+        # Create the layout
+        self.frame_signup = login.Signup(master=self.window_signup)
+
+        # Bind the delete window protocol
+        self.window_signup.protocol('WM_DELETE_WINDOW', self.wsingup_onclosing)
+
+        # Bind commands
+        self.frame_signup.button_signup.configure(command=self.command_wsignup_button_signup)
+
+        # Displaying
+        self.frame_signup.pack()
+
+    def wsingup_onclosing(self):
+        self.window_signup.destroy()
+        self.window_login.destroy()
+        self.root.destroy()
+
+    def command_wsignup_button_signup(self):
+        """Action taken when user hits the "Sign up" button
+        """
+
+        u, p, pc, n = self.frame_signup.var_signup_name.get(),\
+                      self.frame_signup.var_signup_password.get(),\
+                      self.frame_signup.var_signup_password_confirm.get(),\
+                      self.frame_signup.var_signup_name.get()
+        
+        if p != pc:
+            self.frame_signup.var_prompt.set('Unmatched password')
+        elif not util.check_username(u):
+            self.frame_signup.var_prompt.set('Invalid username')
+        else:
+            result = self.signup(u, p, n)
+            if result is None:
+                self.window_signup.destroy()
+                self.window_login.deiconify()
+                self.frame_login.var_prompt.set('Signed up successfully')
+
+    # Client requests
 
     def discover_server(self) -> socket.socket:
         """ This function mimics the behavior of a DNS client when it tries to
@@ -66,49 +172,86 @@ class Client(app.App):
         print(size)
         print(len(data))
 
-    def login(self):
-        self.username = input('Username: ')
-        self.password = input('Password: ')
-        self.send(util.package('login', '', f'{self.username},{self.password}'))
-        status_code, status_message, _, data = util.extract(self.receive())
-        if status_code == '000':
-            print('Logged in')
-            print(data)
-        else:
-            print('Error:', status_message)
-    
-    def login_admin(self):
-        self.username = input('Username: ')
-        self.password = input('Password: ')
-        self.send(util.package('login', 'admin', f'{self.username},{self.password}'))
-        status_code, status_message, _, data = util.extract(self.receive())
-        if status_code == '000':
-            print('Logged in')
-            print(data)
-        else:
-            print('Error:', status_message)
+    def login(self, username, password):
+        """Log in with the given (already checked) username and password
 
-    def signup(self):
+        Parameters
+        ----------
+        username : str
+            
+        password : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, status_message) on failure.
+        Any
+            Return the data expected by the function on success.
+        """
+
+        self.send(util.package('login', '', f'{username},{password}'))
+        status_code, status_message, _, data = util.extract(self.receive())
+        if status_code == '000':
+            return data
+        else:
+            return status_code, status_message
+    
+    def login_admin(self, username, password):
+        """Log in as admin with the given (already checked) username and password
+
+        Parameters
+        ----------
+        username : str
+            
+        password : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, status_message) on failure.
+        Any
+            Return the data expected by the function on success.
+        """
+
+        self.send(util.package('login', 'admin', f'{username},{password}'))
+        status_code, status_message, _, data = util.extract(self.receive())
+        if status_code == '000':
+            return data
+        else:
+            return status_code, status_message
+
+    def signup(self, username, password, name):
+        """Sign up with the given (already checked) username, password, name
+
+        Parameters
+        ----------
+        username : str
+            
+        password : str
+            
+        name : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, status_message) on failure.
+        None
+            Successfully signed up.
+        """
+
         command = 'signup'
         command_type = ''
-
-        self.username = input('Username: ')
-        self.password = input('Password: ')
-        self.name = input('Name: ')
-        retype_password = input('Retype password: ')
-
-        if self.password != retype_password:
-            print('Unmatched password')
-            return
-        else:
-            data = self.username + ',' + self.password + ',' + self.name
+        data = username + ',' + password + ',' + name
 
         self.send(util.package(command, command_type, data))
         status_code, status_message, _, _ = util.extract(self.receive())
         if status_code == '000':
-            print('Sign up succeeded.')
+            return None
         else:
-            print(status_message)
+            return status_code, status_message
 
     def logout(self):
         command = 'logout'
@@ -200,6 +343,8 @@ class Client(app.App):
         pass
         
 if __name__ == '__main__':
-    client = Client()
-    client.login()
-    client.add_city()
+    root = tk.Tk()
+    root.title('Client')
+    client = Client(root)
+    root.withdraw()
+    root.mainloop()

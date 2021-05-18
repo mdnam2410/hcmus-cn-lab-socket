@@ -42,3 +42,27 @@ def validate_iso_date_format(date):
     except Exception:
         return False
     
+def check_username(username: str) -> bool:
+    """Check if a given username is valid
+
+    Parameters
+    ----------
+    username : str
+    
+    Returns
+    -------
+    bool
+        True if valid, False otherwise
+    """
+
+    if len(username) == 0:
+        return False
+    if username.isdecimal():
+        return False
+    if username[0].isdecimal():
+        return False
+    
+    for c in username:
+        if not (c.isalnum() or c == '_'):
+            return False
+    return True
