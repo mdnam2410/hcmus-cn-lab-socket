@@ -190,6 +190,14 @@ class Client(app.App):
             print('OK')
         else:
             print(status_message)
+
+    def update_weather(self):
+        # city_id = self.search_city()
+        # weather_id = local_db.get_weather()
+        # day
+        # min degree, max degree
+        # precipitation
+        pass
         
 if __name__ == '__main__':
     client = Client()
