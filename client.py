@@ -1,6 +1,6 @@
-from datetime import date
+import datetime
 import app
-import login
+import widget
 import util
 
 import socket
@@ -25,13 +25,17 @@ class Client(app.App):
         self.name = ''
 
         self.create_login_window()
+
+        self.frame_weather = widget.WeatherTable(self.root)
+        self.frame_weather.pack()
+        self.frame_weather.spinbox_day.configure(command=self.command_fweather_spinbox_day)
         
     def create_login_window(self):
         # Create the login window
         self.window_login = tk.Toplevel(master=self.root)
 
         # Create the layout
-        self.frame_login = login.Login(self.window_login)
+        self.frame_login = widget.Login(self.window_login)
 
         # Bind commands
         self.frame_login.button_login.configure(command=self.command_wlogin_button_login)
@@ -88,7 +92,7 @@ class Client(app.App):
         self.window_signup = tk.Toplevel(master=self.root)
 
         # Create the layout
-        self.frame_signup = login.Signup(master=self.window_signup)
+        self.frame_signup = widget.Signup(master=self.window_signup)
 
         # Bind the delete window protocol
         self.window_signup.protocol('WM_DELETE_WINDOW', self.wsingup_onclosing)
@@ -123,6 +127,27 @@ class Client(app.App):
                 self.window_signup.destroy()
                 self.window_login.deiconify()
                 self.frame_login.var_prompt.set('Signed up successfully')
+
+    def command_fweather_spinbox_day(self):
+        day = self.frame_weather.var_day.get()
+        # Transform into ISO format
+        temp = datetime.datetime.strptime(day, '%d-%m-%Y')
+        day_iso = datetime.date(temp.year, temp.month, temp.day).isoformat()
+
+        # Contact the server
+        result = self.query_weather_by_day(day_iso)
+        if type(result) is tuple:
+            raise Exception(result[1])
+        else:
+            numcity, cities = result.split('\n', 1)
+            if numcity == '0':
+                self.frame_weather.place_nodata()
+            else:
+                self.frame_weather.remove_all()
+                self.frame_weather.label_nodata.place_forget()
+                for city in cities.splitlines():
+                    self.frame_weather.insert(city.split(','))
+
 
     # Client requests
 
@@ -281,24 +306,32 @@ class Client(app.App):
         else:
             print(status_message)
     
-    def query_weather_by_day(self):
+    def query_weather_by_day(self, day):
+        """Get weather information of all cities in a given day
+
+        Parameters
+        ----------
+        day : str
+            A day, in YYYY-MM-DD format
+
+        Returns
+        -------
+        str
+            Data expected on success
+        tuple
+            A 2-tuple of (status_code, status_message) on failure
+        """
+
         command = 'query'
         command_type = 'weather'
-        day = input('Enter day in YYYY-MM-DD format: ')
 
-        if not util.validate_iso_date_format(day):
-            print('Date not in correct format')
-            return
-        
         self.send(util.package(command, command_type, day))
         status_code, status_message, _, data = util.extract(self.receive())
 
         if status_code == '000':
-            num_city, cities = data.split('\n', 1)
-            print(f'Number of cities: {num_city}')
-            print(cities)
+            return data
         else:
-            print(status_message)
+            return status_code, status_message
     
     def forecast(self):
         command = 'query'

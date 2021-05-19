@@ -1,6 +1,7 @@
-"""Define neccessary classes for displaying layout in the log in and sign up windows
+"""Client and server widgets
 """
 
+import datetime
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -72,3 +73,69 @@ class Signup(ttk.Frame):
         self.entry_signup_name.pack()
         ttk.Label(self, textvariable=self.var_prompt, foreground='red').pack()
         self.button_signup.pack()
+
+
+class WeatherTable(ttk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+
+        # Label
+        self.label_weather = ttk.Label(self, text='Weather')
+
+        # Day spinbox
+        self.today = datetime.date.today()
+        self.day_range = [(self.today + datetime.timedelta(i)).strftime('%d-%m-%Y') for i in range(-6, 1)]
+        self.var_day = tk.StringVar()
+        self.spinbox_day = ttk.Spinbox(self,
+            textvariable=self.var_day,
+            values=self.day_range,
+        )
+
+        # Weather table
+        self.HEADINGS = ['City', 'Country', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
+        self.table_weather = ttk.Treeview(
+            master=self,
+            height=10,
+            columns=['#' + str(x) for x in range(1, len(self.HEADINGS) + 1)],
+            show='headings'
+        )
+
+        for i, t in enumerate(self.HEADINGS):
+            self.table_weather.heading('#' + str(i + 1), text=t)
+        
+        self.iid = -1
+
+        # Display
+        self.label_weather.pack()
+        self.spinbox_day.pack()
+        self.table_weather.pack()
+    
+    def place_nodata(self):
+        if self.iid == -1:
+            self.insert(('No data',))
+    
+    def insert(self, values):
+        """Insert a new weather information at the end of the table
+
+        Parameters
+        ----------
+        values : tuple
+            A 6-tuple of (city_name, country_name, weather_description, min_degree, max_degree, precipitation)
+        """
+
+        self.iid += 1
+        self.table_weather.insert(
+            parent='',
+            index='end',
+            iid=self.iid,
+            values=values
+        )
+
+    def remove_all(self):
+        """Remove all instances in the weather table
+        """
+
+        while self.iid != -1:
+            self.table_weather.delete(self.iid)
+            self.iid -= 1
