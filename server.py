@@ -264,6 +264,6 @@ class Server(app.App):
 
         return (status_code, result)
 
-
-s = Server()
-s.run()
+if __name__ == '__main__':
+    s = Server()
+    s.run()
