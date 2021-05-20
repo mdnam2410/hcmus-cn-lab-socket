@@ -74,6 +74,31 @@ class Signup(ttk.Frame):
         ttk.Label(self, textvariable=self.var_prompt, foreground='red').pack()
         self.button_signup.pack()
 
+class Table(ttk.Treeview):
+    def __init__(self, master, headings, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.master = master
+        self.headings = headings
+
+        self['columns'] = ['#' + str(x) for x in range(1, len(headings) + 1)]
+        self['show'] = 'headings'
+
+        # Show headings
+        for i, t in enumerate(self.headings):
+            self.heading('#' + str(i + 1), text=t)
+
+        self.iid = -1
+    
+    def add_entry(self, values):
+        self.iid += 1
+        self.insert('', 'end', self.iid, values=values)
+
+    def remove_all(self):
+        while self.iid != -1:
+            self.delete(self.iid)
+            self.iid -= 1
+
+
 
 class WeatherTable(ttk.Frame):
     def __init__(self, master):
@@ -139,3 +164,26 @@ class WeatherTable(ttk.Frame):
         while self.iid != -1:
             self.table_weather.delete(self.iid)
             self.iid -= 1
+
+
+class Forecast(ttk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+
+        # Label
+        self.label_forecast = ttk.Label(master=self, text='Forecast')
+
+        # Search bar
+        self.var_searchkeyword = tk.StringVar()
+        self.combobox_searchbar = ttk.Combobox(master=self, textvariable=self.var_searchkeyword)
+        #self.combobox_searchbar.bind('<Return>', self.get_values)
+        
+        # Forecast table
+        self.HEADINGS = ['Day', 'City', 'Country', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
+        self.table_forecast = Table(master=self, headings=self.HEADINGS)
+
+        # Display
+        self.label_forecast.pack()
+        self.combobox_searchbar.pack()
+        self.table_forecast.pack()

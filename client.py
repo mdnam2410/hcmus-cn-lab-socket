@@ -29,6 +29,11 @@ class Client(app.App):
         self.frame_weather = widget.WeatherTable(self.root)
         self.frame_weather.pack()
         self.frame_weather.spinbox_day.configure(command=self.command_fweather_spinbox_day)
+
+        self.frame_forecast = widget.Forecast(self.root)
+        self.frame_forecast.pack()
+        self.frame_forecast.combobox_searchbar.bind('<Return>', self.command_fforecast_combobox_searchbar)
+    
         
     def create_login_window(self):
         # Create the login window
@@ -147,6 +152,26 @@ class Client(app.App):
                 self.frame_weather.label_nodata.place_forget()
                 for city in cities.splitlines():
                     self.frame_weather.insert(city.split(','))
+
+    def command_fforecast_combobox_searchbar(self, event):
+        kw = self.frame_forecast.combobox_searchbar.get()
+        if len(kw) < 3:
+            return
+        result = self.search(kw)
+        if type(result) is tuple:
+            self.frame_forecast.combobox_searchbar['values'] = ['(No result)']
+        else:
+            numcity, cities = result.split('\n', 1)
+            if numcity == '0':
+                self.frame_forecast.combobox_searchbar['values'] = ['(No result)']
+            else:
+                l = []
+                for city in cities.splitlines():
+                    city_id, city_name, country_name = city.split(',', 2)
+                    l.append(f'{city_name}, {country_name}')
+                self.frame_forecast.combobox_searchbar['values'] = l
+                print(l)
+            self.frame_forecast.combobox_searchbar.event_generate('<Button-1>')
 
 
     # Client requests
@@ -290,21 +315,21 @@ class Client(app.App):
         else:
             print(status_message)
     
-    def search(self):
+    def search(self, keyword):
         command = 'query'
         command_type = 'city'
-        keyword = input('Enter city name: ')
 
         self.send(util.package(command, command_type, keyword))
         status_code, status_message, _, data = util.extract(self.receive())
 
         if status_code == '000':
-            num_city, result = data.split('\n', 1)
-            print(f'Found {num_city} matches')
-            for city in result.splitlines():
-                print(city)
+            # num_city, result = data.split('\n', 1)
+            # print(f'Found {num_city} matches')
+            # for city in result.splitlines():
+            #     print(city)
+            return data
         else:
-            print(status_message)
+            return status_code, status_message
     
     def query_weather_by_day(self, day):
         """Get weather information of all cities in a given day
