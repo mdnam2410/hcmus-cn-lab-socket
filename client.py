@@ -122,6 +122,7 @@ class Client(app.App):
 
         # Bind commands
         self.frame_signup.button_signup.configure(command=self.command_wsignup_button_signup)
+        self.frame_signup.label_back.bind('<Button-1>', self.command_wsignup_label_back)
 
         # Displaying
         self.frame_signup.pack()
@@ -150,6 +151,10 @@ class Client(app.App):
                 self.window_signup.destroy()
                 self.window_login.deiconify()
                 self.frame_login.var_prompt.set('Signed up successfully')
+
+    def command_wsignup_label_back(self, event):
+        self.window_signup.destroy()
+        self.create_login_window()
 
     def command_fwelcome_button_logout(self):
         result = self.logout()

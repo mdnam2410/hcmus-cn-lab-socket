@@ -71,6 +71,9 @@ class Signup(ttk.Frame):
         # Sign up button
         self.button_signup = ttk.Button(self, text='Sign up')
 
+        # Back label
+        self.label_back = ttk.Label(self, text='< Back')
+
         self.display()
 
     def display(self):
@@ -89,6 +92,7 @@ class Signup(ttk.Frame):
         ttk.Label(self, text='Name').grid(row=3, column=0, sticky='w')
         self.entry_signup_name.grid(row=3, column=1)
         ttk.Label(self, textvariable=self.var_prompt, foreground='red').grid(row=4, column=1)
+        self.label_back.grid(row=5, column=0, sticky='w')
         self.button_signup.grid(row=5, column=1)
 
 
