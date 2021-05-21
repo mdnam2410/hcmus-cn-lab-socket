@@ -13,9 +13,9 @@ class Login(ttk.Frame):
 
         # Username and password entry
         self.var_username = tk.StringVar()
-        self.entry_username = ttk.Entry(self, textvariable=self.var_username)
+        self.entry_username = ttk.Entry(self, textvariable=self.var_username, width=35)
         self.var_password = tk.StringVar()
-        self.entry_password = ttk.Entry(self, textvariable=self.var_password)
+        self.entry_password = ttk.Entry(self, textvariable=self.var_password, show='*', width=35)
 
         # Label to display message
         self.var_prompt = tk.StringVar()
@@ -29,16 +29,25 @@ class Login(ttk.Frame):
         self.label_signup = ttk.Label(self, text='Sign up', underline=1)
         self.label_adminlogin = ttk.Label(self, text='Log in as admin', underline=1)
 
-        # Display
-        ttk.Label(master=self, text='Username').pack(anchor=tk.W)
-        self.entry_username.pack()
-        ttk.Label(master=self, text='Password').pack(anchor=tk.W)
-        self.entry_password.pack()
-        self.label_prompt.pack()
-        self.button_login.pack()
+        self.display()
 
-        self.label_signup.pack()
-        self.label_adminlogin.pack()
+    def display(self):
+        for i in range(0, 5):
+            self.rowconfigure(i, pad=7)
+        for j in range(0, 2):
+            self.columnconfigure(j, pad=7)
+        self.rowconfigure(2, pad=2)
+
+        ttk.Label(master=self, text='Username').grid(row=0, column=0, sticky='w')
+        self.entry_username.grid(row=0, column=1)
+        ttk.Label(master=self, text='Password').grid(row=1, column=0, sticky='w')
+        self.entry_password.grid(row=1, column=1)
+        self.label_prompt.grid(row=2, column=1)
+        self.button_login.grid(row=3, column=1)
+
+        self.label_signup.grid(row=4, column=0)
+        self.label_adminlogin.grid(row=4, column=1)
+        
 
 
 class Signup(ttk.Frame):
@@ -55,24 +64,32 @@ class Signup(ttk.Frame):
 
         # Entries
         self.entry_signup_username = ttk.Entry(self, textvariable=self.var_signup_username)
-        self.entry_signup_password = ttk.Entry(self, textvariable=self.var_signup_password)
-        self.entry_signup_password_confirm = ttk.Entry(self, textvariable=self.var_signup_password_confirm)
+        self.entry_signup_password = ttk.Entry(self, textvariable=self.var_signup_password, show='*')
+        self.entry_signup_password_confirm = ttk.Entry(self, textvariable=self.var_signup_password_confirm, show='*')
         self.entry_signup_name = ttk.Entry(self, textvariable=self.var_signup_name)
 
         # Sign up button
         self.button_signup = ttk.Button(self, text='Sign up')
 
-        # Displaying
-        ttk.Label(self, text='Username').pack()
-        self.entry_signup_username.pack()
-        ttk.Label(self, text='Password').pack()
-        self.entry_signup_password.pack()
-        ttk.Label(self, text='Confirm password').pack()
-        self.entry_signup_password_confirm.pack()
-        ttk.Label(self, text='Name').pack()
-        self.entry_signup_name.pack()
-        ttk.Label(self, textvariable=self.var_prompt, foreground='red').pack()
-        self.button_signup.pack()
+        self.display()
+
+    def display(self):
+        for i in range(0, 6):
+            self.rowconfigure(i, pad=7)
+        for j in range(0, 2):
+            self.columnconfigure(j, pad=7)
+        self.rowconfigure(4, pad=2)
+
+        ttk.Label(self, text='Username').grid(row=0, column=0, sticky='w')
+        self.entry_signup_username.grid(row=0, column=1)
+        ttk.Label(self, text='Password').grid(row=1, column=0, sticky='w')
+        self.entry_signup_password.grid(row=1, column=1)
+        ttk.Label(self, text='Confirm password').grid(row=2, column=0, sticky='w')
+        self.entry_signup_password_confirm.grid(row=2, column=1)
+        ttk.Label(self, text='Name').grid(row=3, column=0, sticky='w')
+        self.entry_signup_name.grid(row=3, column=1)
+        ttk.Label(self, textvariable=self.var_prompt, foreground='red').grid(row=4, column=1)
+        self.button_signup.grid(row=5, column=1)
 
 
 class Welcome(ttk.Frame):
@@ -82,18 +99,23 @@ class Welcome(ttk.Frame):
 
         # Labels
         self.label_welcome = ttk.Label(self, text='Welcome')
-        self.var_name = tk.StringVar()
+        self.var_name = tk.StringVar(value='name')
         self.label_name = ttk.Label(self, textvariable=self.var_name)
 
         # Buttons
         self.button_logout = ttk.Button(self, text='Log out')
         self.button_admintools = ttk.Button(self, text='Admin tools')
 
-        # Displaying
-        self.label_welcome.pack()
-        self.label_name.pack()
-        self.button_admintools.pack()
-        self.button_logout.pack()
+        self.display()
+    
+    def display(self):
+        for i in range(0, 2):
+            self.rowconfigure(i, pad=7)
+        self.columnconfigure(0, pad=7, weight=1, minsize=40)
+        self.label_welcome.grid(row=0, column=0, sticky='w')
+        self.label_name.grid(row=1, column=0, sticky='w')
+        self.button_admintools.grid(row=0, column=1, rowspan=2)
+        self.button_logout.grid(row=0, column=2, rowspan=2)
 
 
 class Table(ttk.Treeview):
@@ -108,6 +130,11 @@ class Table(ttk.Treeview):
         # Show headings
         for i, t in enumerate(self.headings):
             self.heading('#' + str(i + 1), text=t)
+
+    def auto_resize(self):
+        for i, t in enumerate(self.headings):
+            x = len(t)
+            self.column('#' + str(i + 1), width=10 * x + 8)
 
         self.iid = -1
     
@@ -141,51 +168,17 @@ class WeatherTable(ttk.Frame):
 
         # Weather table
         self.HEADINGS = ['City', 'Country', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
-        self.table_weather = ttk.Treeview(
-            master=self,
-            height=10,
-            columns=['#' + str(x) for x in range(1, len(self.HEADINGS) + 1)],
-            show='headings'
-        )
+        self.table_weather = Table(self, self.HEADINGS)
 
-        for i, t in enumerate(self.HEADINGS):
-            self.table_weather.heading('#' + str(i + 1), text=t)
-        
-        self.iid = -1
+        self.display()
 
-        # Display
-        self.label_weather.pack()
-        self.spinbox_day.pack()
-        self.table_weather.pack()
-    
-    def place_nodata(self):
-        if self.iid == -1:
-            self.insert(('No data',))
-    
-    def insert(self, values):
-        """Insert a new weather information at the end of the table
+    def display(self):
+        self.columnconfigure(0, weight=1, pad=7)
 
-        Parameters
-        ----------
-        values : tuple
-            A 6-tuple of (city_name, country_name, weather_description, min_degree, max_degree, precipitation)
-        """
-
-        self.iid += 1
-        self.table_weather.insert(
-            parent='',
-            index='end',
-            iid=self.iid,
-            values=values
-        )
-
-    def remove_all(self):
-        """Remove all instances in the weather table
-        """
-
-        while self.iid != -1:
-            self.table_weather.delete(self.iid)
-            self.iid -= 1
+        self.label_weather.grid(row=0, column=0, sticky='w')
+        ttk.Label(self, text='Day').grid(row=0, column=1, sticky='e')
+        self.spinbox_day.grid(row=0, column=2)
+        self.table_weather.grid(row=1, column=0, columnspan=3, sticky='nsew')
 
 
 class Forecast(ttk.Frame):
@@ -208,7 +201,18 @@ class Forecast(ttk.Frame):
         self.HEADINGS = ['Day', 'City', 'Country', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
         self.table_forecast = Table(master=self, headings=self.HEADINGS)
 
-        # Display
-        self.label_forecast.pack()
-        self.combobox_searchbar.pack()
-        self.table_forecast.pack()
+        self.display()
+
+    def display(self):
+        self.columnconfigure(0, weight=1, pad=7)
+        self.label_forecast.grid(row=0, column=0, sticky='w')
+        ttk.Label(self, text='Search city').grid(row=0, column=1, sticky='e')
+        self.combobox_searchbar.grid(row=0, column=2)
+        self.table_forecast.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        self.table_forecast.auto_resize()
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    w = Welcome(root)
+    w.grid(row=0, column=0)
+    root.mainloop()

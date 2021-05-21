@@ -23,25 +23,31 @@ class Client(app.App):
 
         self.username = ''
         self.name = ''
+        self.create_interface()
 
+    def create_interface(self):
         self.create_login_window()
 
+        for i in range(0, 3):
+            self.root.rowconfigure(i, pad=7, weight=1)
+        self.root.columnconfigure(0, minsize=300, weight=1, pad=7)
+
         self.frame_welcome = widget.Welcome(self.root)
-        self.frame_welcome.pack()
         self.frame_welcome.button_logout.configure(command=self.command_fwelcome_button_logout)
 
         self.frame_weather = widget.WeatherTable(self.root)
-        self.frame_weather.pack()
         self.frame_weather.spinbox_day.configure(command=self.command_fweather_spinbox_day)
-
+        
         self.frame_forecast = widget.Forecast(self.root)
-        self.frame_forecast.pack()
         self.frame_forecast.combobox_searchbar.bind('<Return>', self.command_fforecast_combobox_searchbar)
         self.frame_forecast.combobox_searchbar.bind(
             '<<ComboboxSelected>>',
             self.command_fforecast_combobox_searchbar_onselect
         )
     
+        self.frame_welcome.grid(row=0, column=0, sticky='nsew')
+        self.frame_weather.grid(row=1, column=0, sticky='nsew')
+        self.frame_forecast.grid(row=2, column=0, sticky='nsew')
         
     def create_login_window(self):
         # Create the login window
@@ -164,14 +170,13 @@ class Client(app.App):
         if type(result) is tuple:
             raise Exception(result[1])
         else:
+            self.frame_weather.table_weather.remove_all()
             numcity, cities = result.split('\n', 1)
             if numcity == '0':
-                self.frame_weather.place_nodata()
+                self.frame_weather.table_weather.add_entry(('No data',))
             else:
-                self.frame_weather.remove_all()
-                self.frame_weather.label_nodata.place_forget()
                 for city in cities.splitlines():
-                    self.frame_weather.insert(city.split(','))
+                    self.frame_weather.table_weather.add_entry(city.split(','))
 
     def command_fforecast_combobox_searchbar(self, event):
         kw = self.frame_forecast.combobox_searchbar.get()
