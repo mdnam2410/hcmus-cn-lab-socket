@@ -171,6 +171,9 @@ class Forecast(ttk.Frame):
         super().__init__(master)
         self.master = master
 
+        # Hold the result of the last city search. A dict mapping from "city_name, country_name" to city_id
+        self.recent_cities = {}
+
         # Label
         self.label_forecast = ttk.Label(master=self, text='Forecast')
 

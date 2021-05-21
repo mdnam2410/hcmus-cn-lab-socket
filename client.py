@@ -33,6 +33,10 @@ class Client(app.App):
         self.frame_forecast = widget.Forecast(self.root)
         self.frame_forecast.pack()
         self.frame_forecast.combobox_searchbar.bind('<Return>', self.command_fforecast_combobox_searchbar)
+        self.frame_forecast.combobox_searchbar.bind(
+            '<<ComboboxSelected>>',
+            self.command_fforecast_combobox_searchbar_onselect
+        )
     
         
     def create_login_window(self):
@@ -165,14 +169,35 @@ class Client(app.App):
             if numcity == '0':
                 self.frame_forecast.combobox_searchbar['values'] = ['(No result)']
             else:
-                l = []
+                self.frame_forecast.recent_cities.clear()
+                self.frame_forecast.recent_cities = {}
+
                 for city in cities.splitlines():
                     city_id, city_name, country_name = city.split(',', 2)
-                    l.append(f'{city_name}, {country_name}')
-                self.frame_forecast.combobox_searchbar['values'] = l
-                print(l)
+                    # Value to be put in the combobox
+                    v = f'{city_name}, {country_name}'
+                    if v in self.frame_forecast.recent_cities:
+                        v += ' *'
+                    self.frame_forecast.recent_cities[v] = city_id
+
+                self.frame_forecast.combobox_searchbar['values'] = list(self.frame_forecast.recent_cities.keys())
             self.frame_forecast.combobox_searchbar.event_generate('<Button-1>')
 
+    def command_fforecast_combobox_searchbar_onselect(self, event):
+        city = self.frame_forecast.combobox_searchbar.get()
+        city_id = self.frame_forecast.recent_cities[city]
+
+        result = self.forecast(city_id)
+        if type(result) is tuple:
+            print(result)
+        else:
+            num_result, weather_info = result.split('\n', 1)
+            if num_result == '0':
+                print('0')
+            else:
+                for d in weather_info:
+                    _, city_name, country_name, day, min_degree, max_degree, precipitation = d.split(',')
+                    self.frame_forecast.table_forecast.add_entry((day, city_name, country_name, min_degree, max_degree, precipitation))
 
     # Client requests
 
@@ -358,21 +383,21 @@ class Client(app.App):
         else:
             return status_code, status_message
     
-    def forecast(self):
+    def forecast(self, city_id):
         command = 'query'
         command_type = 'forecast'
-        city_id = input('Enter city id: ')
 
         self.send(util.package(command, command_type, city_id))
         status_code, status_message, _, data = util.extract(self.receive())
 
         if status_code == '000':
-            num_result, weather_info = data.split('\n', 1)
-            print(f'Available forecast for {num_result} days')
-            for weather in weather_info.splitlines():
-                print(weather)
+            # num_result, weather_info = data.split('\n', 1)
+            # print(f'Available forecast for {num_result} days')
+            # for weather in weather_info.splitlines():
+            #     print(weather)
+            return data
         else:
-            print(status_message)
+            return status_code, status_message
 
     def add_city(self):
         command = 'update'
