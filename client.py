@@ -26,6 +26,10 @@ class Client(app.App):
 
         self.create_login_window()
 
+        self.frame_welcome = widget.Welcome(self.root)
+        self.frame_welcome.pack()
+        self.frame_welcome.button_logout.configure(command=self.command_fwelcome_button_logout)
+
         self.frame_weather = widget.WeatherTable(self.root)
         self.frame_weather.pack()
         self.frame_weather.spinbox_day.configure(command=self.command_fweather_spinbox_day)
@@ -73,6 +77,10 @@ class Client(app.App):
         if type(result) is tuple:
             self.frame_login.var_prompt.set(result[1])
             return
+        self.username, self.name = result.split(',', 1)
+        self.frame_welcome.var_name.set(self.name)
+        if self.frame_login.login_option == 'ordinary':
+            self.frame_welcome.button_admintools.pack_forget()
         self.window_login.destroy()
         self.root.deiconify()
 
@@ -136,6 +144,14 @@ class Client(app.App):
                 self.window_signup.destroy()
                 self.window_login.deiconify()
                 self.frame_login.var_prompt.set('Signed up successfully')
+
+    def command_fwelcome_button_logout(self):
+        result = self.logout()
+        if type(result) is tuple:
+            print(result)
+        else:
+            self.root.withdraw()
+            self.create_login_window()
 
     def command_fweather_spinbox_day(self):
         day = self.frame_weather.var_day.get()
@@ -336,9 +352,9 @@ class Client(app.App):
         self.send(util.package(command, command_type, data))
         status_code, status_message, _, _ = util.extract(self.receive())
         if status_code == '000':
-            print('Logged out successfully')
+            return None
         else:
-            print(status_message)
+            return status_code, status_message
     
     def search(self, keyword):
         command = 'query'

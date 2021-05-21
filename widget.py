@@ -74,6 +74,28 @@ class Signup(ttk.Frame):
         ttk.Label(self, textvariable=self.var_prompt, foreground='red').pack()
         self.button_signup.pack()
 
+
+class Welcome(ttk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.master = master
+
+        # Labels
+        self.label_welcome = ttk.Label(self, text='Welcome')
+        self.var_name = tk.StringVar()
+        self.label_name = ttk.Label(self, textvariable=self.var_name)
+
+        # Buttons
+        self.button_logout = ttk.Button(self, text='Log out')
+        self.button_admintools = ttk.Button(self, text='Admin tools')
+
+        # Displaying
+        self.label_welcome.pack()
+        self.label_name.pack()
+        self.button_admintools.pack()
+        self.button_logout.pack()
+
+
 class Table(ttk.Treeview):
     def __init__(self, master, headings, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
