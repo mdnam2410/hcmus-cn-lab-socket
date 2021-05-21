@@ -86,7 +86,7 @@ class Client(app.App):
         self.username, self.name = result.split(',', 1)
         self.frame_welcome.var_name.set(self.name)
         if self.frame_login.login_option == 'ordinary':
-            self.frame_welcome.button_admintools.pack_forget()
+            self.frame_welcome.button_admintools.grid_remove()
         self.window_login.destroy()
         self.root.deiconify()
 
