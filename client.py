@@ -37,7 +37,7 @@ class Client(app.App):
 
         self.frame_weather = widget.WeatherTable(self.root)
         self.frame_weather.spinbox_day.configure(command=self.command_fweather_spinbox_day)
-        
+
         self.frame_forecast = widget.Forecast(self.root)
         self.frame_forecast.combobox_searchbar.bind('<Return>', self.command_fforecast_combobox_searchbar)
         self.frame_forecast.combobox_searchbar.bind(
@@ -217,8 +217,8 @@ class Client(app.App):
                 print('0')
             else:
                 for d in weather_info:
-                    _, city_name, country_name, day, min_degree, max_degree, precipitation = d.split(',')
-                    self.frame_forecast.table_forecast.add_entry((day, city_name, country_name, min_degree, max_degree, precipitation))
+                    _, _, _, day, min_degree, max_degree, precipitation = d.split(',')
+                    self.frame_forecast.table_forecast.add_entry((day, min_degree, max_degree, precipitation))
 
     # Client requests
 

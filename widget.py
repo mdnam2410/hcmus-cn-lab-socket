@@ -130,13 +130,13 @@ class Table(ttk.Treeview):
         # Show headings
         for i, t in enumerate(self.headings):
             self.heading('#' + str(i + 1), text=t)
+        self.iid = -1
 
     def auto_resize(self):
         for i, t in enumerate(self.headings):
             x = len(t)
             self.column('#' + str(i + 1), width=10 * x + 8)
 
-        self.iid = -1
     
     def add_entry(self, values):
         self.iid += 1
@@ -198,7 +198,7 @@ class Forecast(ttk.Frame):
         #self.combobox_searchbar.bind('<Return>', self.get_values)
         
         # Forecast table
-        self.HEADINGS = ['Day', 'City', 'Country', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
+        self.HEADINGS = ['Day', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
         self.table_forecast = Table(master=self, headings=self.HEADINGS)
 
         self.display()
