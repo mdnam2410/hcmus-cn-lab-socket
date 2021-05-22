@@ -26,7 +26,7 @@ class Database:
         return self
 
     def __exit__(self, type, value, traceback):
-        if type is not None:
+        if type is None:
             self.con.commit()
         else:
             self.con.rollback()
