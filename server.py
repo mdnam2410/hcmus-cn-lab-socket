@@ -209,7 +209,7 @@ class Server(app.App):
         return (status_code, result)
 
     def request_signup(self, command_type, data):
-        username, password, name = data.split(',', 2)
+        name, username, password = data.split(',', 2)
         with database.Database(self.DATABASE_PATH) as db:
             result = db.sign_up(username, password, name)
             if result:

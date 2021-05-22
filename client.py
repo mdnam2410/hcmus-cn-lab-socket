@@ -345,7 +345,7 @@ class Client(app.App):
 
         command = 'signup'
         command_type = ''
-        data = username + ',' + password + ',' + name
+        data = ','.join([name, username, password])
 
         self.send(util.package(command, command_type, data))
         status_code, status_message, _, _ = util.extract(self.receive())
