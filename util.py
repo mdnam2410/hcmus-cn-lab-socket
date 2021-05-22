@@ -57,8 +57,8 @@ def check_username(username: str) -> bool:
 
     if len(username) == 0:
         return False
-    if username.isdecimal():
-        return False
+    if username.isnumeric():
+        return True
     if username[0].isdecimal():
         return False
     
@@ -66,3 +66,15 @@ def check_username(username: str) -> bool:
         if not (c.isalnum() or c == '_'):
             return False
     return True
+
+def check_name(name: str) -> bool:
+    if len(name) == 0:
+        return False
+    for c in name:
+        if not (c.isalnum() or c.isspace()):
+            return False
+    return True
+
+if __name__ == '__main__':
+    n = 'e120'
+    print(check_username(n))

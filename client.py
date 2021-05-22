@@ -79,16 +79,22 @@ class Client(app.App):
         """
 
         u, p = self.frame_login.var_username.get(), self.frame_login.var_password.get()
-        result = self.login(u, p) if self.frame_login.login_option == 'ordinary' else self.login_admin(u, p)
-        if type(result) is tuple:
-            self.frame_login.var_prompt.set(result[1])
-            return
-        self.username, self.name = result.split(',', 1)
-        self.frame_welcome.var_name.set(self.name)
-        if self.frame_login.login_option == 'ordinary':
-            self.frame_welcome.button_admintools.grid_remove()
-        self.window_login.destroy()
-        self.root.deiconify()
+
+        if len(p) == 0 or len(u) == 0:
+            self.frame_login.var_prompt.set('Username and password must not be empty')
+        elif util.check_username(u) is False:
+            self.frame_login.var_prompt.set('Invalid username')
+        else:
+            result = self.login(u, p) if self.frame_login.login_option == 'ordinary' else self.login_admin(u, p)
+            if type(result) is tuple:
+                self.frame_login.var_prompt.set(result[1])
+                return
+            self.username, self.name = result.split(',', 1)
+            self.frame_welcome.var_name.set(self.name)
+            if self.frame_login.login_option == 'ordinary':
+                self.frame_welcome.button_admintools.grid_remove()
+            self.window_login.destroy()
+            self.root.deiconify()
 
     def command_wlogin_label_adminlogin(self, event):
         if self.frame_login.login_option == 'ordinary':
@@ -145,6 +151,8 @@ class Client(app.App):
             self.frame_signup.var_prompt.set('Unmatched password')
         elif not util.check_username(u):
             self.frame_signup.var_prompt.set('Invalid username')
+        elif not util.check_name(n):
+            self.frame_signup.var_prompt.set('Invalid name')
         else:
             result = self.signup(u, p, n)
             if result is None:
