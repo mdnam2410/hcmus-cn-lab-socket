@@ -142,7 +142,7 @@ class Client(app.App):
         """Action taken when user hits the "Sign up" button
         """
 
-        u, p, pc, n = self.frame_signup.var_signup_name.get(),\
+        u, p, pc, n = self.frame_signup.var_signup_username.get(),\
                       self.frame_signup.var_signup_password.get(),\
                       self.frame_signup.var_signup_password_confirm.get(),\
                       self.frame_signup.var_signup_name.get()
