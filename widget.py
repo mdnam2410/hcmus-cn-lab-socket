@@ -5,6 +5,7 @@ import datetime
 import threading
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.font
 
 class Login(ttk.Frame):
     def __init__(self, master):
@@ -132,9 +133,16 @@ class Table(ttk.Treeview):
         self['columns'] = ['#' + str(x) for x in range(1, len(headings) + 1)]
         self['show'] = 'headings'
 
+        self.s = ttk.Style(self)
+        self.f = tkinter.font.Font(self, font=self.s.lookup(self['style'], 'font'), weight='bold')
+        self.max_column_widths = [0] * len(self.headings)
+
         # Show headings
         for i, t in enumerate(self.headings):
             self.heading('#' + str(i + 1), text=t)
+            self.max_column_widths[i] = self.f.measure(self.heading('#' + str(i + 1), 'text'))
+            self.column('#' + str(i + 1), width=self.max_column_widths[i] + 12)
+        
         self.iid = -1
 
     def auto_resize(self):
@@ -146,6 +154,12 @@ class Table(ttk.Treeview):
     def add_entry(self, values):
         self.iid += 1
         self.insert('', 'end', self.iid, values=values)
+        for i, t in enumerate(values):
+            col_id = '#' + str(i + 1)
+            x = self.f.measure(t)
+            if x > self.max_column_widths[i]:
+                self.max_column_widths[i] = x
+                self.column(col_id, width=x + 12)
 
     def remove_all(self):
         while self.iid != -1:
@@ -228,7 +242,6 @@ class UserActivities(ttk.Frame):
         # Table
         self.HEADINGS = ['Client', 'Activity Type', 'Time']
         self.table = Table(self, self.HEADINGS, height=5)
-        self.table.auto_resize()
 
         self.display()
 
@@ -273,6 +286,10 @@ class Statistics(ttk.Frame):
         self.var_requestsmade.set(self.var_requestsmade.get() - 1)
 
     def display(self):
+        for i in range(0, 2):
+            self.rowconfigure(i, weight=1)
+            self.columnconfigure(i, weight=1)
+
         ttk.Label(self, text='Total Connections').grid(row=0, column=0, columnspan=2)
         self.label_totalconnections.grid(row=1, column=0, columnspan=2)
         ttk.Label(self, text='Active Users').grid(row=2, column=0)
@@ -291,20 +308,21 @@ class ServerInterface(threading.Thread):
         self.root.protocol('WM_DELETE_WINDOW', self.callback)
 
         self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=1)
         self.root.columnconfigure(0, weight=1)
-        self.root.columnconfigure(1, weight=1)
 
         self.frame_useractivities = UserActivities(self.root)
-        self.frame_useractivities.grid(row=0, column=0)
-
         self.frame_stat = Statistics(self.root)
-        self.frame_stat.grid(row=0, column=1)
+
+        self.frame_useractivities.grid(row=0, column=0, sticky='nsew')
+        self.frame_stat.grid(row=1, column=0, sticky='nsew')
         self.root.mainloop()
 
 if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('200x200')
-    r = Statistics(root)
+    r = Table(root, ['Column 1', 'Column 2'])
     r.grid(row=0, column=0)
+    r.add_entry(('item 1', 'item 222222'))
     root.mainloop()
     
