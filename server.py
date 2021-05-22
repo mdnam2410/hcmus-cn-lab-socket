@@ -126,6 +126,14 @@ class Server(app.App):
             self.system_on = False
             print('At here')
 
+    def update_record(self, conn, command):
+        self.interface.frame_useractivities.table.add_entry((
+            conn.getpeername()[0],
+            command,
+            datetime.datetime.now().isoformat()
+        ))
+        self.interface.frame_stat.inc_requestsmade()
+
     def serve(self, conn: socket.socket):
         """Target function for threads that communicate with client
         
@@ -146,11 +154,12 @@ class Server(app.App):
                     m = self.receive_from(conn)
                     command, command_type, _, data = util.extract(m)
 
+                    # Update the GUI statistics
+                    self.update_record(conn, command)
+
                     # Do the request
                     t = self.requests[command](command_type, data)
 
-                    # Inspect the clients
-                    print(self.clients)
 
                     # Response
                     response = util.package(t[0], self.status_messages[t[0]], t[1])
@@ -202,6 +211,10 @@ class Server(app.App):
                     'admin' if admin else 'ordinary',
                     datetime.datetime.now()
                 )
+
+                # Increase active users
+                self.interface.frame_stat.inc_activeusers()
+                
                 result = f'{username},{user_info[0][1]}\n'                
                 status_code = '000'
             else:
@@ -225,6 +238,9 @@ class Server(app.App):
             return ('103', '')
         else:
             self.clients[threading.current_thread().ident] = ('', '', '')
+            
+            # Decrease active users
+            self.interface.frame_stat.dec_activeusers()
             return ('000', '')
 
     def request_query(self, command_type, data):

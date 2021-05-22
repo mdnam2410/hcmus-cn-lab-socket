@@ -226,7 +226,7 @@ class UserActivities(ttk.Frame):
         self.label_activeusers = ttk.Label(self, text='User Activities')
 
         # Table
-        self.HEADINGS = ['Username', 'Priviledge', 'Activity Type', 'Time']
+        self.HEADINGS = ['Client', 'Activity Type', 'Time']
         self.table = Table(self, self.HEADINGS, height=5)
         self.table.auto_resize()
 
