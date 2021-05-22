@@ -18,15 +18,19 @@ The basic structure of a message is as follow:
 ## Request messages
 ### Header line
 The header line of the request messages contains two field:
-```<command> [<type>]```
-* `command` field: a string describes the action to be performed by the server (one of `login`, `logout`, `signup`, `query`).
-* `type` field (optional): a string describes the type of the command requested (e.g. `login admin` tells the server that the user is logging in as an admin.)
+```
+<command> [<type>]
+```
+* `command` field: a string describing the action to be performed by the server (one of 'discover`, `login`, `logout`, `signup`, `query`).
+* `type` field (optional): a string describing the type of the command requested (e.g. `login admin` tells the server that the user is logging in as an admin.)
 
 ### Message size
 An integer (represented as a string) indicates the size of the message (in bytes).
 
 ### Data field
-The `data` field contains the data associated with the command and can be empty (since not all commands required associated data). The structure of the `data` field depends on the command and the type of command.
+The `data` field contains the data associated with the command and can be empty (since not all commands required associated data).
+
+The overall structure of the `data` field is a sequence of comma-separated values, similar to the structure of a CSV file (but without header row). The exact number of columns and the meaning of them depend on the command requested by the clients.
 
 ## Response messages
 ### Header line
@@ -39,13 +43,29 @@ The header line of the response messages also contains two fields:
 Same as request messages.
 
 ### Data field
-The `data` field of responses messages contains the data required by the clients. `data` field is empty if the status code is not `000` (means success). Otherwise, it contains the data requested by the clients and its structure also depends on the request made prior by the clients.
+The `data` field of responses messages contains the data required by the clients. `data` field is empty if the status code is not `000` (means success). Otherwise, it contains the data requested by the clients. The structure of the response message's `data` field is the same as that in a request message.
+
 
 # Commands
-The commands are divided into six categories: _discover_, _login_, _logout_, _signup_, _query_, and _update_. Each command can have one or more types.
+The commands are divided into six categories: _discover_, _login_, _logout_, _signup_, _query_, and _update_. Each command can have zero or more types.
 
 ## discover
+The **discover** command is sent by the client when it starts up. The goal is to check if the server is running in the same network as the client, so that the client can obtain its address and establish the connection to it.
 
+#### Type field
+```
+<empty>
+```
+
+#### Request message data field
+```
+<empty>
+```
+
+#### Response message data field
+```
+<server IP address>
+```
 
 ## login
 The **login** command sends to the server a username and a password to signal that the user is logging in. The login command has two types:
@@ -106,7 +126,7 @@ Requests the server to log out.
 `<empty>`
 
 ## signup
-The **signup** command register a new user to the database. This command is available to ordinary user only. Admins are predefined.
+The **signup** command register a new user to the database. This command is available to ordinary user only. Admin accounts are predetermined.
 
 #### Description
 Register a new user.
