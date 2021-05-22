@@ -2,6 +2,7 @@
 """
 
 import datetime
+import threading
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -215,8 +216,95 @@ class Forecast(ttk.Frame):
         self.table_forecast.grid(row=1, column=0, columnspan=3, sticky='nsew')
         self.table_forecast.auto_resize()
 
+
+class UserActivities(ttk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.master = master
+
+        # Title
+        self.label_activeusers = ttk.Label(self, text='User Activities')
+
+        # Table
+        self.HEADINGS = ['Username', 'Priviledge', 'Activity Type', 'Time']
+        self.table = Table(self, self.HEADINGS, height=5)
+        self.table.auto_resize()
+
+        self.display()
+
+    def display(self):
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.label_activeusers.grid(row=0, column=0, sticky='w')
+        self.table.grid(row=1, column=0, sticky='nsew')
+
+class Statistics(ttk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master)
+        self.master = master
+
+        self.var_totalconnections = tk.IntVar(value=0)
+        self.var_activeusers = tk.IntVar(value=0)
+        self.var_requestsmade = tk.IntVar(value=0)
+
+        self.label_totalconnections = ttk.Label(self, textvariable=self.var_totalconnections)
+        self.label_activeusers = ttk.Label(self, textvariable=self.var_activeusers)
+        self.label_requestsmade = ttk.Label(self, textvariable=self.var_requestsmade)
+
+        self.display()
+
+    def inc_totalconnections(self):
+        self.var_totalconnections.set(self.var_totalconnections.get() + 1)
+
+    def dec_totalconnections(self):
+        self.var_totalconnections.set(self.var_totalconnections.get() - 1)
+
+    def inc_activeusers(self):
+        self.var_activeusers.set(self.var_activeusers.get() + 1)
+
+    def dec_activeusers(self):
+        self.var_activeusers.set(self.var_activeusers.get() - 1)
+
+    def inc_requestsmade(self):
+        self.var_requestsmade.set(self.var_requestsmade.get() + 1)
+
+    def dec_requestsmade(self):
+        self.var_requestsmade.set(self.var_requestsmade.get() - 1)
+
+    def display(self):
+        ttk.Label(self, text='Total Connections').grid(row=0, column=0, columnspan=2)
+        self.label_totalconnections.grid(row=1, column=0, columnspan=2)
+        ttk.Label(self, text='Active Users').grid(row=2, column=0)
+        self.label_activeusers.grid(row=3, column=0)
+        ttk.Label(self, text='Requests Made').grid(row=2, column=1)
+        self.label_requestsmade.grid(row=3, column=1)
+
+
+class ServerInterface(threading.Thread):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+
+    def run(self):
+        self.root = tk.Tk()
+        self.root.protocol('WM_DELETE_WINDOW', self.callback)
+
+        self.root.rowconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight=1)
+        self.root.columnconfigure(1, weight=1)
+
+        self.frame_useractivities = UserActivities(self.root)
+        self.frame_useractivities.grid(row=0, column=0)
+
+        self.frame_stat = Statistics(self.root)
+        self.frame_stat.grid(row=0, column=1)
+        self.root.mainloop()
+
 if __name__ == '__main__':
     root = tk.Tk()
-    w = Welcome(root)
-    w.grid(row=0, column=0)
+    root.geometry('200x200')
+    r = Statistics(root)
+    r.grid(row=0, column=0)
     root.mainloop()
+    

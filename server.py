@@ -1,6 +1,7 @@
 import app
 import database
 import util
+import widget
 
 import datetime
 import socket
@@ -49,10 +50,14 @@ class Server(app.App):
         self.lock = threading.Lock()
 
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.main_socket.settimeout(1.0)
         self.main_socket.bind((self.SERVER_ADDRESS, self.SERVER_PORT))
 
         # Background thread that listens and responses to discovery requests from remote clients
         self.thread_discovery = threading.Thread(target=self.response_to_discovery_request, daemon=True)
+
+        # A thread maintaining GUI
+        self.interface = widget.ServerInterface(self.exit)
 
     def response_to_discovery_request(self):
         """This function listens for remote client discovery message and responses
@@ -78,11 +83,12 @@ class Server(app.App):
 
     def run(self):
         self.thread_discovery.start()
+        self.interface.start()
 
         with self.main_socket:
             self.main_socket.listen()
-            try:
-                while True:
+            while self.system_on:
+                try:    
                     # Accept connection from clients
                     conn, _ = self.main_socket.accept()
 
@@ -98,8 +104,8 @@ class Server(app.App):
                         # It's OK
                         conn.send(util.package('000', '', ''))
                     
-                    # Still open a thread tho
-                    # TODO: Send back to the client that maximum number of threads has been reached
+                    with self.lock:
+                        self.interface.frame_stat.inc_totalconnections()
 
                     # Start a thread for the accepted client
                     thread = threading.Thread(target=self.serve, args=(conn,))
@@ -108,8 +114,17 @@ class Server(app.App):
 
                     # Initialize the user identification associated with the thread
                     self.clients[thread.ident] = ('', '', '')
-            except Exception:
-                self.system_on = False
+                except socket.timeout:
+                    continue
+                except Exception:
+                    self.system_on = False
+
+    def exit(self):
+        self.interface.root.destroy()
+        with self.lock:
+            print('Here')
+            self.system_on = False
+            print('At here')
 
     def serve(self, conn: socket.socket):
         """Target function for threads that communicate with client
@@ -140,9 +155,9 @@ class Server(app.App):
                     # Response
                     response = util.package(t[0], self.status_messages[t[0]], t[1])
                     conn.send(response)
-        except app.ConnectionError as e:
-            print(e)
-
+        except app.ConnectionError:
+            with self.lock:
+                self.interface.frame_stat.dec_totalconnections()
             # Remove the thread
             self.clients.pop(threading.current_thread().ident)
         
