@@ -219,7 +219,7 @@ class Client(app.App):
             self.f_signup.v_prompt.set('Unmatched password')
         elif not util.check_username(u):
             self.f_signup.v_prompt.set('Invalid username')
-        elif not util.check_name(n):
+        elif not util.is_alnum_with_space(n):
             self.f_signup.v_prompt.set('Invalid name')
         else:
             result = self.sign_up(u, p, n)
@@ -270,7 +270,7 @@ class Client(app.App):
                                                      a.e_lat.get(),\
                                                      a.e_lon.get()
 
-        if not util.check_name(city_name)\
+        if not util.is_alnum_with_space(city_name)\
            or not city_id.isdecimal()\
            or len(country_code) != 2\
            or not country_code.isalpha()\

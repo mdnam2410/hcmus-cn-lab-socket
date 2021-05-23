@@ -43,37 +43,62 @@ def validate_iso_date_format(date):
         return False
     
 def check_username(username: str) -> bool:
-    """Check if a given username is valid
+    """Validate if a given string can be used as a username.
 
     Parameters
     ----------
     username : str
-    
+
     Returns
     -------
     bool
-        True if valid, False otherwise
+
+    A string is validated if:
+    - It contains at least one character.
+    - Its characters are either alphanumeric or underscores.
+    - It does not start with a number.
+    - It contains at least one alphanumeric character, i.e. cannot contain all numbers or all underscores.
     """
 
     if len(username) == 0:
         return False
-    if username.isnumeric():
-        return True
     if username[0].isdecimal():
         return False
     
+    has_alnum = False
     for c in username:
-        if not (c.isalnum() or c == '_'):
+        if not(c.isalnum() or c == '_'):
             return False
-    return True
+        if c.isalnum():
+            has_alnum = True
+    return True if has_alnum else False
 
-def check_name(name: str) -> bool:
+def is_alnum_with_space(name: str) -> bool:
+    """Validate if a given string only contains alphanumeric characters or spaces.
+
+    Parameters
+    ----------
+    string : str
+
+    Returns
+    -------
+    bool
+
+    A string is validated if:
+    - It contains more than one character.
+    - Its characters are either alphanumeric or spaces.
+    - It contains at least one alphanumeric character, i.e. cannot contain spaces only.
+    """
+
     if len(name) == 0:
         return False
+    has_alnum = False
     for c in name:
         if not (c.isalnum() or c.isspace()):
             return False
-    return True
+        if c.isalnum():
+            has_alnum = True
+    return True if has_alnum else False
 
 def isfloat(string) -> bool:
     try:
