@@ -10,7 +10,8 @@ class App:
     """
     
     def __init__(self):
-        # Main socket object
+        # Main socket, used for listening to client connections by server, and for establishing connection to server
+        # by clients.
         self.main_socket = None
         self.socket_buffer = 1024
 
@@ -56,6 +57,7 @@ class App:
         message : bytes
 
         """
+        
         self.main_socket.send(message)
 
     def receive(self) -> bytes:
@@ -66,4 +68,5 @@ class App:
         bytes
             The full message
         """
+
         return self.receive_from(self.main_socket)

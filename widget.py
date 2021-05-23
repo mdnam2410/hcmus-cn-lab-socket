@@ -11,25 +11,25 @@ class Login(ttk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.master = master
-        self.login_option = 'ordinary'
+        self.login_type = 'ordinary'
 
         # Username and password entry
-        self.var_username = tk.StringVar()
-        self.entry_username = ttk.Entry(self, textvariable=self.var_username, width=35)
-        self.var_password = tk.StringVar()
-        self.entry_password = ttk.Entry(self, textvariable=self.var_password, show='*', width=35)
+        self.v_username = tk.StringVar()
+        self.entry_username = ttk.Entry(self, textvariable=self.v_username, width=35)
+        self.v_password = tk.StringVar()
+        self.entry_password = ttk.Entry(self, textvariable=self.v_password, show='*', width=35)
 
         # Label to display message
-        self.var_prompt = tk.StringVar()
-        self.label_prompt = ttk.Label(self, textvariable=self.var_prompt, foreground='red')
+        self.v_prompt = tk.StringVar()
+        self.label_prompt = ttk.Label(self, textvariable=self.v_prompt, foreground='red')
 
         # Login button
-        self.var_login_button_text = tk.StringVar(value='Log in')
-        self.button_login = ttk.Button(self, textvariable=self.var_login_button_text)
+        self.v_logintype = tk.StringVar(value='Log in')
+        self.b_login = ttk.Button(self, textvariable=self.v_logintype)
 
         # Alternative options
-        self.label_signup = ttk.Label(self, text='Sign up', underline=1)
-        self.label_adminlogin = ttk.Label(self, text='Log in as admin', underline=1)
+        self.l_signup = ttk.Label(self, text='Sign up', underline=1)
+        self.l_adminlogin = ttk.Label(self, text='Log in as admin', underline=1)
 
         self.display()
 
@@ -45,10 +45,10 @@ class Login(ttk.Frame):
         ttk.Label(master=self, text='Password').grid(row=1, column=0, sticky='w')
         self.entry_password.grid(row=1, column=1)
         self.label_prompt.grid(row=2, column=1)
-        self.button_login.grid(row=3, column=1)
+        self.b_login.grid(row=3, column=1)
 
-        self.label_signup.grid(row=4, column=0)
-        self.label_adminlogin.grid(row=4, column=1)
+        self.l_signup.grid(row=4, column=0)
+        self.l_adminlogin.grid(row=4, column=1)
         
 
 
@@ -58,23 +58,23 @@ class Signup(ttk.Frame):
         self.master = master
 
         # Text variables
-        self.var_signup_username = tk.StringVar()
-        self.var_signup_password = tk.StringVar()
-        self.var_signup_password_confirm = tk.StringVar()
-        self.var_signup_name = tk.StringVar()
-        self.var_prompt = tk.StringVar()
+        self.v_username = tk.StringVar()
+        self.v_password = tk.StringVar()
+        self.v_passwordconfirm = tk.StringVar()
+        self.v_name = tk.StringVar()
+        self.v_prompt = tk.StringVar()
 
         # Entries
-        self.entry_signup_username = ttk.Entry(self, textvariable=self.var_signup_username)
-        self.entry_signup_password = ttk.Entry(self, textvariable=self.var_signup_password, show='*')
-        self.entry_signup_password_confirm = ttk.Entry(self, textvariable=self.var_signup_password_confirm, show='*')
-        self.entry_signup_name = ttk.Entry(self, textvariable=self.var_signup_name)
+        self.entry_signup_username = ttk.Entry(self, textvariable=self.v_username)
+        self.entry_signup_password = ttk.Entry(self, textvariable=self.v_password, show='*')
+        self.entry_signup_password_confirm = ttk.Entry(self, textvariable=self.v_passwordconfirm, show='*')
+        self.entry_signup_name = ttk.Entry(self, textvariable=self.v_name)
 
         # Sign up button
-        self.button_signup = ttk.Button(self, text='Sign up')
+        self.b_signup = ttk.Button(self, text='Sign up')
 
         # Back label
-        self.label_back = ttk.Label(self, text='< Back')
+        self.l_back = ttk.Label(self, text='< Back')
 
         self.display()
 
@@ -93,9 +93,9 @@ class Signup(ttk.Frame):
         self.entry_signup_password_confirm.grid(row=2, column=1)
         ttk.Label(self, text='Name').grid(row=3, column=0, sticky='w')
         self.entry_signup_name.grid(row=3, column=1)
-        ttk.Label(self, textvariable=self.var_prompt, foreground='red').grid(row=4, column=1)
-        self.label_back.grid(row=5, column=0, sticky='w')
-        self.button_signup.grid(row=5, column=1)
+        ttk.Label(self, textvariable=self.v_prompt, foreground='red').grid(row=4, column=1)
+        self.l_back.grid(row=5, column=0, sticky='w')
+        self.b_signup.grid(row=5, column=1)
 
 
 class Welcome(ttk.Frame):
@@ -105,12 +105,12 @@ class Welcome(ttk.Frame):
 
         # Labels
         self.label_welcome = ttk.Label(self, text='Welcome')
-        self.var_name = tk.StringVar(value='name')
-        self.label_name = ttk.Label(self, textvariable=self.var_name)
+        self.v_name = tk.StringVar(value='name')
+        self.label_name = ttk.Label(self, textvariable=self.v_name)
 
         # Buttons
-        self.button_logout = ttk.Button(self, text='Log out')
-        self.button_admintools = ttk.Button(self, text='Admin tools')
+        self.b_logout = ttk.Button(self, text='Log out')
+        self.b_admintools = ttk.Button(self, text='Admin tools')
 
         self.display()
     
@@ -120,8 +120,8 @@ class Welcome(ttk.Frame):
         self.columnconfigure(0, pad=7, weight=1, minsize=40)
         self.label_welcome.grid(row=0, column=0, sticky='w')
         self.label_name.grid(row=1, column=0, sticky='w')
-        self.button_admintools.grid(row=0, column=1, rowspan=2)
-        self.button_logout.grid(row=0, column=2, rowspan=2)
+        self.b_admintools.grid(row=0, column=1, rowspan=2)
+        self.b_logout.grid(row=0, column=2, rowspan=2)
 
 
 class Table(ttk.Treeview):
@@ -179,15 +179,15 @@ class WeatherTable(ttk.Frame):
         # Day spinbox
         self.today = datetime.date.today()
         self.day_range = [(self.today + datetime.timedelta(i)).strftime('%d-%m-%Y') for i in range(-6, 1)]
-        self.var_day = tk.StringVar()
-        self.spinbox_day = ttk.Spinbox(self,
-            textvariable=self.var_day,
+        self.v_date = tk.StringVar()
+        self.s_day = ttk.Spinbox(self,
+            textvariable=self.v_date,
             values=self.day_range,
         )
 
         # Weather table
         self.HEADINGS = ['City', 'Country', 'Weather', 'Min degree', 'Max degree', 'Precipitation']
-        self.table_weather = Table(self, self.HEADINGS)
+        self.t_weather = Table(self, self.HEADINGS)
 
         self.display()
 
@@ -196,8 +196,8 @@ class WeatherTable(ttk.Frame):
 
         self.label_weather.grid(row=0, column=0, sticky='w')
         ttk.Label(self, text='Day').grid(row=0, column=1, sticky='e')
-        self.spinbox_day.grid(row=0, column=2)
-        self.table_weather.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        self.s_day.grid(row=0, column=2)
+        self.t_weather.grid(row=1, column=0, columnspan=3, sticky='nsew')
 
 
 class Forecast(ttk.Frame):
@@ -213,7 +213,7 @@ class Forecast(ttk.Frame):
 
         # Search bar
         self.var_searchkeyword = tk.StringVar()
-        self.combobox_searchbar = ttk.Combobox(master=self, textvariable=self.var_searchkeyword)
+        self.c_searchbar = ttk.Combobox(master=self, textvariable=self.var_searchkeyword)
         #self.combobox_searchbar.bind('<Return>', self.get_values)
         
         # Forecast table
@@ -226,7 +226,7 @@ class Forecast(ttk.Frame):
         self.columnconfigure(0, weight=1, pad=7)
         self.label_forecast.grid(row=0, column=0, sticky='w')
         ttk.Label(self, text='Search city').grid(row=0, column=1, sticky='e')
-        self.combobox_searchbar.grid(row=0, column=2)
+        self.c_searchbar.grid(row=0, column=2)
         self.table_forecast.grid(row=1, column=0, columnspan=3, sticky='nsew')
         self.table_forecast.auto_resize()
 
@@ -241,31 +241,31 @@ class AdminTools(ttk.Frame):
 
         # ---------- Add city frame's widgets ----------
         # Entries
-        self.entry_cityid1 = ttk.Entry(self.frame_addcity)
-        self.entry_cityname = ttk.Entry(self.frame_addcity)
-        self.entry_country = ttk.Entry(self.frame_addcity)
-        self.entry_lat = ttk.Entry(self.frame_addcity)
-        self.entry_lon = ttk.Entry(self.frame_addcity)
+        self.e_cityid1 = ttk.Entry(self.frame_addcity)
+        self.e_cityname = ttk.Entry(self.frame_addcity)
+        self.e_country = ttk.Entry(self.frame_addcity)
+        self.e_lat = ttk.Entry(self.frame_addcity)
+        self.e_lon = ttk.Entry(self.frame_addcity)
 
         # Buttons
-        self.button_add = ttk.Button(self.frame_addcity, text='Add')
+        self.b_add = ttk.Button(self.frame_addcity, text='Add')
         
 
         # ----------- Edit weather frame's widgets ----------
         # Entries
-        self.entry_cityid2 = ttk.Entry(self.frame_editweather)
-        self.entry_date = ttk.Entry(self.frame_editweather)
-        self.entry_weather = ttk.Entry(self.frame_editweather)
-        self.entry_mindegree = ttk.Entry(self.frame_editweather)
-        self.entry_maxdegree = ttk.Entry(self.frame_editweather)
-        self.entry_precipitation = ttk.Entry(self.frame_editweather)
+        self.e_cityid2 = ttk.Entry(self.frame_editweather)
+        self.e_date = ttk.Entry(self.frame_editweather)
+        self.e_weather = ttk.Entry(self.frame_editweather)
+        self.e_mindegree = ttk.Entry(self.frame_editweather)
+        self.e_maxdegree = ttk.Entry(self.frame_editweather)
+        self.e_precipitation = ttk.Entry(self.frame_editweather)
 
         # Buttons
-        self.button_update = ttk.Button(self.frame_editweather, text='Update')
+        self.b_update = ttk.Button(self.frame_editweather, text='Update')
 
         # ---------- Common label for displaying command's status ----------
-        self.var_status = tk.StringVar()
-        self.label_status = ttk.Label(self, textvariable=self.var_status)
+        self.v_status = tk.StringVar()
+        self.label_status = ttk.Label(self, textvariable=self.v_status)
 
         self.display()
 
@@ -279,26 +279,26 @@ class AdminTools(ttk.Frame):
 
         labels1 = ['City ID', 'City name', 'Country code', 'Latitude', 'Longitude']
         addcity_entries = [
-            self.entry_cityid1, self.entry_cityname, self.entry_country, self.entry_lat, self.entry_lon
+            self.e_cityid1, self.e_cityname, self.e_country, self.e_lat, self.e_lon
         ]
         for i in range(0, len(labels1)):
             ttk.Label(self.frame_addcity, text=labels1[i]).grid(row=i, column=0, sticky='w')
             addcity_entries[i].grid(row=i, column=1, sticky='nsew')
         
-        self.button_add.grid(row=5, column=1, sticky='e')
+        self.b_add.grid(row=5, column=1, sticky='e')
         
         # ----------- Edit weather ----------
         self.frame_editweather.columnconfigure(1, weight=1, minsize=70)
 
         labels2 = ['City ID', 'Date (YYYY-MM-DD)', 'Weather ID', 'Min degree', 'Max degree', 'Precipitation']
         editweather_entries = [
-            self.entry_cityid2, self.entry_date, self.entry_weather,
-            self.entry_mindegree, self.entry_maxdegree, self.entry_precipitation
+            self.e_cityid2, self.e_date, self.e_weather,
+            self.e_mindegree, self.e_maxdegree, self.e_precipitation
         ]
         for i in range(0, len(labels2)):
             ttk.Label(self.frame_editweather, text=labels2[i]).grid(row=i, column=0, sticky='w')
             editweather_entries[i].grid(row=i, column=1, sticky='nsew')
-        self.button_update.grid(row=6, column=1, sticky='e')
+        self.b_update.grid(row=6, column=1, sticky='e')
 
 
 class UserActivities(ttk.Frame):
