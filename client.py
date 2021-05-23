@@ -34,6 +34,7 @@ class Client(app.App):
 
         self.frame_welcome = widget.Welcome(self.root)
         self.frame_welcome.button_logout.configure(command=self.command_fwelcome_button_logout)
+        self.frame_welcome.button_admintools.configure(command=self.command_fwelcome_button_admintools)
 
         self.frame_weather = widget.WeatherTable(self.root)
         self.frame_weather.spinbox_day.configure(command=self.command_fweather_spinbox_day)
@@ -171,6 +172,43 @@ class Client(app.App):
         else:
             self.root.withdraw()
             self.create_login_window()
+
+    def command_fwelcome_button_admintools(self):
+        self.window_admintools = tk.Toplevel(self.root)
+        self.window_admintools.rowconfigure(0, weight=1)
+        self.window_admintools.columnconfigure(0, weight=1)
+
+        self.frame_admintools = widget.AdminTools(self.window_admintools)
+        self.frame_admintools.rowconfigure(0, weight=1)
+        self.frame_admintools.rowconfigure(1, weight=1)
+        self.frame_admintools.columnconfigure(0, weight=1)
+
+        self.frame_admintools.button_add.configure(command=self.command_admintools_button_add)
+
+        self.frame_admintools.grid(row=0, column=0, sticky='nsew')
+
+    def command_admintools_button_add(self):
+        a = self.frame_admintools
+
+        city_id, city_name, country_code, lat, lon = a.entry_cityid1.get(),\
+                                                     a.entry_cityname.get(),\
+                                                     a.entry_country.get(),\
+                                                     a.entry_lat.get(),\
+                                                     a.entry_lon.get()
+
+        if not util.check_name(city_name)\
+           or not city_id.isdecimal()\
+           or len(country_code) != 2\
+           or not country_code.isalpha()\
+           or not util.isfloat(lat)\
+           or not util.isfloat(lon):
+            a.var_status.set('Error')
+        else:
+            r = self.add_city(city_id, city_name, country_code, lat, lon)
+            if r is None:
+                a.var_status.set('Success')
+            else:
+                a.var_status.set(r[1])
 
     def command_fweather_spinbox_day(self):
         day = self.frame_weather.var_day.get()
@@ -433,23 +471,17 @@ class Client(app.App):
         else:
             return status_code, status_message
 
-    def add_city(self):
+    def add_city(self, city_id, city_name, country_code, lat, lon):
         command = 'update'
         command_type = 'city'
-
-        city_id = input('City ID: ')
-        city_name = input('City name: ')
-        country_code = input('Country code: ')
-        lat = float(input('Latitude: '))
-        lon = float(input('Longitude: '))
 
         data = ','.join([city_id, city_name, country_code, str(lat), str(lon)])
         self.send(util.package(command, command_type, data))
         status_code, status_message, *_ = util.extract(self.receive())
         if status_code == '000':
-            print('OK')
+            return None
         else:
-            print(status_message)
+            return status_code, status_message
 
     def update_weather(self):
         # city_id = self.search_city()

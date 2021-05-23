@@ -75,6 +75,13 @@ def check_name(name: str) -> bool:
             return False
     return True
 
+def isfloat(string) -> bool:
+    try:
+        float(string)
+        return True
+    except Exception:
+        return False
+
 if __name__ == '__main__':
     n = 'e120'
     print(check_username(n))

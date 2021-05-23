@@ -230,6 +230,76 @@ class Forecast(ttk.Frame):
         self.table_forecast.grid(row=1, column=0, columnspan=3, sticky='nsew')
         self.table_forecast.auto_resize()
 
+class AdminTools(ttk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.master = master
+
+        # Frames
+        self.frame_addcity = tk.LabelFrame(self, text='Add city')
+        self.frame_editweather = tk.LabelFrame(self, text='Edit weather information')
+
+        # ---------- Add city frame's widgets ----------
+        # Entries
+        self.entry_cityid1 = ttk.Entry(self.frame_addcity)
+        self.entry_cityname = ttk.Entry(self.frame_addcity)
+        self.entry_country = ttk.Entry(self.frame_addcity)
+        self.entry_lat = ttk.Entry(self.frame_addcity)
+        self.entry_lon = ttk.Entry(self.frame_addcity)
+
+        # Buttons
+        self.button_add = ttk.Button(self.frame_addcity, text='Add')
+        
+
+        # ----------- Edit weather frame's widgets ----------
+        # Entries
+        self.entry_cityid2 = ttk.Entry(self.frame_editweather)
+        self.entry_date = ttk.Entry(self.frame_editweather)
+        self.entry_weather = ttk.Entry(self.frame_editweather)
+        self.entry_mindegree = ttk.Entry(self.frame_editweather)
+        self.entry_maxdegree = ttk.Entry(self.frame_editweather)
+        self.entry_precipitation = ttk.Entry(self.frame_editweather)
+
+        # Buttons
+        self.button_update = ttk.Button(self.frame_editweather, text='Update')
+
+        # ---------- Common label for displaying command's status ----------
+        self.var_status = tk.StringVar()
+        self.label_status = ttk.Label(self, textvariable=self.var_status)
+
+        self.display()
+
+    def display(self):
+        self.frame_addcity.grid(row=0, column=0, sticky='nsew')
+        self.frame_editweather.grid(row=1, column=0, sticky='nsew')
+        self.label_status.grid(row=2, column=0, sticky='w')
+
+        # ----------- Add city -----------
+        self.frame_addcity.columnconfigure(1, weight=1, minsize=70)
+
+        labels1 = ['City ID', 'City name', 'Country code', 'Latitude', 'Longitude']
+        addcity_entries = [
+            self.entry_cityid1, self.entry_cityname, self.entry_country, self.entry_lat, self.entry_lon
+        ]
+        for i in range(0, len(labels1)):
+            ttk.Label(self.frame_addcity, text=labels1[i]).grid(row=i, column=0, sticky='w')
+            addcity_entries[i].grid(row=i, column=1, sticky='nsew')
+        
+        self.button_add.grid(row=5, column=1, sticky='e')
+        
+        # ----------- Edit weather ----------
+        self.frame_editweather.columnconfigure(1, weight=1, minsize=70)
+
+        labels2 = ['City ID', 'Date (YYYY-MM-DD)', 'Weather ID', 'Min degree', 'Max degree', 'Precipitation']
+        editweather_entries = [
+            self.entry_cityid2, self.entry_date, self.entry_weather,
+            self.entry_mindegree, self.entry_maxdegree, self.entry_precipitation
+        ]
+        for i in range(0, len(labels2)):
+            ttk.Label(self.frame_editweather, text=labels2[i]).grid(row=i, column=0, sticky='w')
+            editweather_entries[i].grid(row=i, column=1, sticky='nsew')
+        self.button_update.grid(row=6, column=1, sticky='e')
+
 
 class UserActivities(ttk.Frame):
     def __init__(self, master, **kwargs):
@@ -321,8 +391,12 @@ class ServerInterface(threading.Thread):
 if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('200x200')
-    r = Table(root, ['Column 1', 'Column 2'])
-    r.grid(row=0, column=0)
-    r.add_entry(('item 1', 'item 222222'))
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+    r = AdminTools(root)
+    r.columnconfigure(0, weight=1)
+    r.rowconfigure(0, weight=1)
+    r.rowconfigure(1, weight=1)
+    r.grid(row=0, column=0, sticky='nsew')
     root.mainloop()
     
