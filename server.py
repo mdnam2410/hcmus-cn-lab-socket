@@ -289,7 +289,11 @@ class Server(app.App):
         with self.lock:
             with database.Database(self.DATABASE_PATH) as db:
                 if command_type == 'city':
-                    status_code = '000' if db.add_city(data) else '301'
+                    s = data.split(',', 4)
+                    s[3] = float(s[3])
+                    s[4] = float(s[4])
+                    s = tuple(s)
+                    status_code = '000' if db.add_city(s) else '301'
                 elif command_type == 'weather':
                     status_code = '000' if db.update_weather_by_city() else '301'
 
