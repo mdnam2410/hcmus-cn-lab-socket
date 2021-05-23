@@ -153,19 +153,36 @@ class Client(app.App):
 
         if len(p) == 0 or len(u) == 0:
             self.f_login.v_prompt.set('Username and password must not be empty')
-        elif util.check_username(u) is False:
-            self.f_login.v_prompt.set('Invalid username')
         else:
-            result = self.log_in(u, p) if self.f_login.login_type == 'ordinary' else self.log_in_as_admin(u, p)
-            if type(result) is tuple:
-                self.f_login.v_prompt.set(result[1])
-                return
-            self.username, self.name = result.split(',', 1)
-            self.f_welcome.v_name.set(self.name)
             if self.f_login.login_type == 'ordinary':
-                self.f_welcome.b_admintools.grid_remove()
-            self.w_login.destroy()
-            self.root.deiconify()
+                if util.check_username(u) is False:
+                    self.f_login.v_prompt.set('Invalid username')
+                    return
+            else:
+                if not u.isnumeric():
+                    self.f_login.v_prompt.set('Not admin')
+                    return
+
+        # Log in according to the login type
+        result = self.log_in(u, p) if self.f_login.login_type == 'ordinary' else self.log_in_as_admin(u, p)
+
+        # On failure
+        if type(result) is tuple:
+            # Prompt the status message
+            self.f_login.v_prompt.set(result[1])
+            return
+        
+        self.username, self.name = result.split(',', 1)
+        self.f_welcome.v_name.set(self.name)
+
+        # Display or undisplay Admin Tools button
+        if self.f_login.login_type == 'ordinary':
+            self.f_welcome.b_admintools.grid_remove()
+        else:
+            self.f_welcome.b_admintools.grid()
+        
+        self.w_login.destroy()
+        self.root.deiconify()
 
     def command_wlogin_ladminlogin(self, event):
         """Actions taken when hitting the "Log in as admin" label
