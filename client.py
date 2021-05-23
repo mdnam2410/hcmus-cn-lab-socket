@@ -195,7 +195,7 @@ class Client(app.App):
         """
         
         self.w_login.withdraw()
-        self.create_login_window()
+        self.create_signup_window()
 
     def command_wsignup_onclosing(self):
         """Actions taken when closing the Sign up window
