@@ -295,7 +295,8 @@ class Server(app.App):
                     s = tuple(s)
                     status_code = '000' if db.add_city(s) else '301'
                 elif command_type == 'weather':
-                    status_code = '000' if db.update_weather_by_city() else '301'
+                    city_id, date, rest = data.split(',', 2)
+                    status_code = '000' if db.update_weather(city_id, date, tuple(rest.split(','))) else '301'
 
         return (status_code, result)
 

@@ -240,14 +240,20 @@ class Database:
         except sqlite3.DatabaseError:
             return False
 
-    def update_weather_by_city(self, city_id, weather_info):
-        """Update the weather information of a given city
+    def update_weather(self, city_id, date, weather_info):
+        """Add or update weather information of a given city.
+
+        Add a new weather_info of the city with ID city_id if the given date is not present in the database.
+        Overwrite the current weather_info if date is present.
 
         Parameters
         ----------
         city_id : int
+
+        date : str
+            In YYYY-MM-DD format
         weather_info : tuple
-            A 5-tuple of (day, weather_id, min_degree, max_degree, precipitation)
+            A 4-tuple of (weather_id, min_degree, max_degree, precipitation)
 
         Returns
         -------
@@ -255,18 +261,29 @@ class Database:
             True if successful, False otherwise
         """
         
-        query = '''
+        update_query = '''
         UPDATE city_weather
-        SET report_date = ?, weather_id = ?, min_degree = ?, max_degree = ?, precipitation = ?
-        WHERE city_id = ?;
+        SET weather_id = ?, min_degree = ?, max_degree = ?, precipitation = ?
+        WHERE city_id = ? AND report_date = ?;
         '''
+
+        add_query = '''
+        INSERT INTO city_weather(weather_id, min_degree, max_degree, precipitation, city_id, report_date)
+            VALUES (?, ?, ?, ?, ?, ?);
+        '''
+
+        self.cur.execute('SELECT * FROM city_weather WHERE city_id = ? AND report_date = ?', (city_id, date))
+        add = True if len(self.cur.fetchall()) else False
         
-        t = [x for x in weather_info]
-        t.append(city_id)
-        pack = tuple(t)
+        p = [x for x in weather_info]
+        p.append(city_id)
+        p.append(date)
+
         try:
-            self.cur.execute(query, parameters=pack)
-            self.cur.commit()
+            if add:
+                self.cur.execute(update_query, p)
+            else:
+                self.cur.execute(add_query, p)
             return True
         except sqlite3.DatabaseError:
             return False

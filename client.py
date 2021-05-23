@@ -184,6 +184,7 @@ class Client(app.App):
         self.frame_admintools.columnconfigure(0, weight=1)
 
         self.frame_admintools.button_add.configure(command=self.command_admintools_button_add)
+        self.frame_admintools.button_update.configure(command=self.command_admintools_button_update)
 
         self.frame_admintools.grid(row=0, column=0, sticky='nsew')
 
@@ -209,6 +210,29 @@ class Client(app.App):
                 a.var_status.set('Success')
             else:
                 a.var_status.set(r[1])
+
+    def command_admintools_button_update(self):
+        a = self.frame_admintools
+        c, d, w, mind, maxd, pre = a.entry_cityid2.get(),\
+                                   a.entry_date.get(),\
+                                   a.entry_weather.get(),\
+                                   a.entry_mindegree.get(),\
+                                   a.entry_maxdegree.get(),\
+                                   a.entry_precipitation.get()
+
+        if not c.isdecimal() or\
+           not util.validate_iso_date_format(d) or\
+           not w.isdecimal() or\
+           not (util.isfloat(mind) and float(mind) > -273.15) or\
+           not (util.isfloat(maxd) and float(maxd) >= float(mind)) or\
+           not (util.isfloat(pre) and float(pre) >= 0 and float(pre) <= 1):
+            a.var_status.set('Error')
+        else:
+            result = self.update_weather(c, d, w, mind, maxd, pre)
+            if result is None:
+                a.var_status.set('Success')
+            else:
+                a.var_status.set(result[1])
 
     def command_fweather_spinbox_day(self):
         day = self.frame_weather.var_day.get()
@@ -483,13 +507,41 @@ class Client(app.App):
         else:
             return status_code, status_message
 
-    def update_weather(self):
-        # city_id = self.search_city()
-        # weather_id = local_db.get_weather()
-        # day
-        # min degree, max degree
-        # precipitation
-        pass
+    def update_weather(self, city_id, date, weather_id, min_degree, max_degree, precipitation):
+        """Add or update weather record of a city in a given date
+
+        Parameters
+        ----------
+        city_id : int
+            
+        date : str
+            In YYYY-MM-DD format
+        weather_id : int
+            
+        min_degree : float
+            A number greater -273.15
+        max_degree : float
+            A number greater or equal min_degree
+        precipitation : float
+            A number between 0 and 1
+
+        Returns
+        -------
+        None
+            Returns if the operation succeeds
+        tuple
+            A 2-tuple of (status_code, status_message) on failure
+        """
+        command = 'update'
+        command_type = 'weather'
+        data = ','.join([city_id, date, weather_id, min_degree, max_degree, precipitation])
+
+        self.send(util.package(command, command_type, data))
+        status_code, status_message, *_ = util.extract(self.receive())
+
+        if status_code == '000':
+            return None
+        return status_code, status_message
         
 if __name__ == '__main__':
     root = tk.Tk()
