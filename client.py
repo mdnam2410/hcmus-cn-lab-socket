@@ -90,7 +90,7 @@ class Client(app.App):
         self.f_welcome.b_admintools.configure(command=self.command_fwelcome_badmintools)
 
         # -------- The Weather frame --------
-        self.f_weather = widget.WeatherTable(self.root)
+        self.f_weather = widget.Weather(self.root)
         self.f_weather.s_day.configure(command=self.command_fweather_sday)
 
         # -------- The Forecast frame --------
@@ -332,10 +332,10 @@ class Client(app.App):
             self.f_weather.t_weather.remove_all()
             numcity, cities = result.split('\n', 1)
             if numcity == '0':
-                self.f_weather.t_weather.add_entry(('No data',))
+                self.f_weather.t_weather.add_row(('No data',))
             else:
                 for city in cities.splitlines():
-                    self.f_weather.t_weather.add_entry(city.split(','))
+                    self.f_weather.t_weather.add_row(city.split(','))
 
     def command_fforecast_csearchbar_onreturn(self, event):
         """Actions taken when hitting return in the Search combobox in the Forecast frame
@@ -395,7 +395,7 @@ class Client(app.App):
             else:
                 for d in weather_info:
                     _, _, _, day, min_degree, max_degree, precipitation = d.split(',')
-                    self.f_forecast.table_forecast.add_entry((day, min_degree, max_degree, precipitation))
+                    self.f_forecast.t_forecast.add_row((day, min_degree, max_degree, precipitation))
 
 
     # ---------- Methods to make requests to the server ----------

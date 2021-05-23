@@ -57,7 +57,7 @@ class Server(app.App):
         self.thread_discovery = threading.Thread(target=self.response_to_discovery_request, daemon=True)
 
         # A thread maintaining GUI
-        self.interface = widget.ServerInterface(self.exit)
+        self.interface = widget.ServerWindow(self.exit)
 
     def response_to_discovery_request(self):
         """This function listens for remote client discovery message and responses
@@ -105,7 +105,7 @@ class Server(app.App):
                         conn.send(util.package('000', '', ''))
                     
                     with self.lock:
-                        self.interface.frame_stat.inc_totalconnections()
+                        self.interface.f_stat.inc_totalconnections()
 
                     # Start a thread for the accepted client
                     thread = threading.Thread(target=self.serve, args=(conn,))
@@ -127,12 +127,12 @@ class Server(app.App):
             print('At here')
 
     def update_record(self, conn, command):
-        self.interface.frame_useractivities.table.add_entry((
+        self.interface.f_useractivities.t_activities.add_row((
             conn.getpeername()[0],
             command,
             datetime.datetime.now().isoformat()
         ))
-        self.interface.frame_stat.inc_requestsmade()
+        self.interface.f_stat.inc_requestsmade()
 
     def serve(self, conn: socket.socket):
         """Target function for threads that communicate with client
@@ -166,7 +166,7 @@ class Server(app.App):
                     conn.send(response)
         except app.ConnectionError:
             with self.lock:
-                self.interface.frame_stat.dec_totalconnections()
+                self.interface.f_stat.dec_totalconnections()
             # Remove the thread
             self.clients.pop(threading.current_thread().ident)
         
@@ -213,7 +213,7 @@ class Server(app.App):
                 )
 
                 # Increase active users
-                self.interface.frame_stat.inc_activeusers()
+                self.interface.f_stat.inc_activeusers()
                 
                 result = f'{username},{user_info[0][1]}\n'                
                 status_code = '000'
@@ -240,7 +240,7 @@ class Server(app.App):
             self.clients[threading.current_thread().ident] = ('', '', '')
             
             # Decrease active users
-            self.interface.frame_stat.dec_activeusers()
+            self.interface.f_stat.dec_activeusers()
             return ('000', '')
 
     def request_query(self, command_type, data):
