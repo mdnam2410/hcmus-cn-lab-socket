@@ -343,7 +343,7 @@ class Server(app.App):
             
             elif command_type == 'weather':
                 # data contains the date in YYYY-MM-DD format
-                r = db.weather_by_date(request_data)
+                r = db.query_weather_by_date(request_data)
                 num_city = len(r)
 
                 response_data = str(num_city) + '\n'

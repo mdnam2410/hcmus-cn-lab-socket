@@ -6,7 +6,8 @@ class DatabaseConnectionError(Exception):
     pass
 
 class Database:
-    """Class that provides encapsulation for basic queries needed for the app"""
+    """Providing access to the server database
+    """
 
     def __init__(self, database_path):
         self.today = datetime.date.today()
@@ -31,6 +32,9 @@ class Database:
         else:
             self.con.rollback()
 
+
+    # ---------- Utility methods ----------
+
     def execute_query(self, query):
         self.cur.execute(query)
         return self.cur.fetchall()
@@ -38,7 +42,8 @@ class Database:
     def commit(self):
         self.con.commit()
 
-    # User and admin methods
+
+    # ---------- User-identity-related methods ----------
 
     def authenticate(self, username, password):
         """Authenticate a user with given username and password
@@ -55,11 +60,12 @@ class Database:
 
         """
 
-        query = """
+        query = '''
         SELECT user.username, user.name
         FROM user
         WHERE user.username = ? AND user.password = ?;
-        """
+        '''
+
         self.cur.execute(query, (username, password))
         return self.cur.fetchall()
 
@@ -91,9 +97,10 @@ class Database:
             self.con.commit()
             return True
 
-    # Weather query methods
 
-    def weather_by_date(self, date: str):
+    # ---------- Weather querying methods ----------
+
+    def query_weather_by_date(self, date: str):
         """Retrieve weather condition of all cities in a given date
 
         Parameters
@@ -130,9 +137,9 @@ class Database:
             A list of (city_id, city_name, country_name, report_date, main, min_degree, max_degree, precipitaion).
         """
 
-        return self.weather_by_date(self.today.isoformat())
+        return self.query_weather_by_date(self.today.isoformat())
 
-    def weather_by_date_range(self, city_id, start, end):
+    def query_weather_by_date_range(self, city_id, start, end):
         """Retrieve weather information of a city in a date range [start, end]
 
         Parameters
@@ -152,7 +159,7 @@ class Database:
             Returns if start > date
         """
 
-        query = """
+        query = '''
         SELECT c.city_id, c.city_name, ct.country_name, cw.report_date, 
                wc.main, cw.min_degree, cw.max_degree, cw.precipitation
         FROM   city_weather AS cw JOIN city AS c
@@ -161,7 +168,8 @@ class Database:
                ON cw.weather_id = wc.weather_id
                JOIN country AS ct
                ON c.country_code = ct.country_code
-        WHERE  c.city_id = ? AND cw.report_date BETWEEN ? AND ?;"""
+        WHERE  c.city_id = ? AND cw.report_date BETWEEN ? AND ?;
+        '''
 
         s = datetime.date.fromisoformat(start)
         e = datetime.date.fromisoformat(end)
@@ -185,13 +193,14 @@ class Database:
             sorted by report_date
         """
 
-        return self.weather_by_date_range(
+        return self.query_weather_by_date_range(
             city_id,
             start=self.today.isoformat(),
             end=(self.today + datetime.timedelta(days=6)).isoformat()
         )
 
-    # Searching
+
+    # ---------- Searching methods ----------
 
     def search_city(self, name):
         """Search city by name
@@ -206,15 +215,19 @@ class Database:
             A list of (city_id, city_name, country_name).
         """
 
-        query = """
+        query = '''
         SELECT c.city_id, c.city_name, ct.country_name
         FROM city AS c JOIN country AS ct ON c.country_code = ct.country_code
         WHERE city_name LIKE ?;
-        """
+        '''
+
         name = name.lower()
         name = '%' + name + '%'
         self.cur.execute(query, (name,))
         return self.cur.fetchall()
+
+
+    # ---------- Database modification methods ----------
 
     def add_city(self, city_info):
         """Insert a new city
