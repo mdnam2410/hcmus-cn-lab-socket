@@ -419,6 +419,14 @@ class ServerWindow(threading.Thread):
     """
 
     def __init__(self, callback):
+        """Create the thread
+
+        Parameters
+        ----------
+        callback : function
+            Callback function used when exiting the main window
+        """
+        
         super().__init__()
         self.callback = callback
 

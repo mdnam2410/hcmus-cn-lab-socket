@@ -1,11 +1,12 @@
+import datetime
+import socket
+import threading
+
 import app
 import database
 import util
 import widget
 
-import datetime
-import socket
-import threading
 
 class Server(app.App):
     def __init__(self):
@@ -13,12 +14,9 @@ class Server(app.App):
 
         self.DATABASE_PATH = 'db/wether.db'
         self.SERVER_ADDRESS = socket.gethostbyname(socket.gethostname())
-        self.MAX_CLIENT_THREAD = 2
+        self.MAX_CLIENT_THREADS = 2
 
-        # Main database
-        # self.db = database.Database('db/wether.db')
-
-        # Dictionary to translate status codes to status messages
+        # Dictionary ranslating status codes to status messages
         self.status_messages = {
             '000': 'OK',
             '001': 'Reached maximum client',
@@ -31,6 +29,7 @@ class Server(app.App):
             '301': 'Error in adding city'
         }
 
+        # Dictionary translating from command to the corresponding handle methods
         self.requests = {
             'test': self.test,
             'login': self.request_login,
@@ -54,12 +53,143 @@ class Server(app.App):
         self.main_socket.bind((self.SERVER_ADDRESS, self.SERVER_PORT))
 
         # Background thread that listens and responses to discovery requests from remote clients
-        self.thread_discovery = threading.Thread(target=self.response_to_discovery_request, daemon=True)
+        self.thread_discovery = threading.Thread(target=self.request_discovery, daemon=True)
 
-        # A thread maintaining GUI
-        self.interface = widget.ServerWindow(self.exit)
+        # Thread maintaining the main window
+        self.main_window = widget.ServerWindow(self.exit)
 
-    def response_to_discovery_request(self):
+
+    # ----------- Utility methods ----------
+
+    def update_request_statistics(self, conn, command):
+        """Update the statistics in the main window (including adding new row in the
+        Activities table and increasing Requests Made)
+
+        Parameters
+        ----------
+        conn : socket.socket
+            The socket connected to the client. Needed this to get the client's address.
+        command : str
+            The command requested by the client.
+        """
+
+        self.main_window.f_useractivities.t_activities.add_row((
+            conn.getpeername()[0],
+            command,
+            datetime.datetime.now().isoformat()
+        ))
+        self.main_window.f_stat.inc_requestsmade()
+
+    def logged_in(self, username) -> bool:
+        """Check if the username has already logged in (in the current thread or other thread)
+
+        Returns
+        -------
+        bool
+            True if the client has already logged in, False otherwise
+        """
+        for v in self.clients.values():
+            if username in v:
+                return True
+        return False
+
+
+    # ----------- Starting and exiting methods ----------
+
+    def run(self):
+        """Start the server
+        """
+
+        self.thread_discovery.start()
+        self.main_window.start()
+
+        with self.main_socket:
+            self.main_socket.listen()
+            while self.system_on:
+                try:    
+                    # Accept connection from clients
+                    conn, _ = self.main_socket.accept()
+
+                    # Reached maximum connection allowed
+                    if len(self.clients) == self.MAX_CLIENT_THREADS:
+                        # Notify the client that the maximum has reached
+                        conn.send(util.package('001', self.status_messages['001'], ''))
+                        conn.close()
+                        continue
+                    else:
+                        # Otherwise, accept the client
+                        conn.send(util.package('000', '', ''))
+                    
+                    with self.lock:
+                        self.main_window.f_stat.inc_totalconnections()
+
+                    # Start a thread for each accepted client
+                    thread = threading.Thread(target=self.slave, args=(conn,))
+                    thread.start()
+
+                    # Initialize the user identification associated with the thread
+                    self.clients[thread.ident] = ('', '', '')
+
+                except socket.timeout:
+                    continue
+                except Exception:
+                    with self.lock:
+                        self.system_on = False
+
+    def exit(self):
+        """Close the server
+        """
+
+        self.main_window.root.destroy()
+        with self.lock:
+            self.system_on = False
+
+
+    # ---------- Slave method used by threads ----------
+
+    def slave(self, conn: socket.socket):
+        """Target function for threads that communicate with client
+        
+        Parameters
+        ----------
+        conn : socket.socket
+            The TCP socket that is communicating with the client
+        """
+        
+        try:
+            with conn:
+                while self.system_on:
+                    # Extract request message
+                    m = self.receive_from(conn)
+                    command, command_type, _, data = util.extract(m)
+
+                    # Update the request statistics
+                    self.update_request_statistics(conn, command)
+
+                    # Do the request
+                    t = self.requests[command](command_type, data)
+
+                    # Response
+                    response = util.package(t[0], self.status_messages[t[0]], t[1])
+                    conn.send(response)
+
+        # Connection to client is terminated    
+        except app.ConnectionError:
+            with self.lock:
+                if self.main_window.is_alive():
+                    self.main_window.f_stat.dec_totalconnections()
+                    self.main_window.f_stat.dec_activeusers()
+
+            # Remove the thread
+            self.clients.pop(threading.current_thread().ident)
+        
+
+    # ---------- Methods handling requests from clients ----------
+
+    def test(self, command_type, data):
+        return ('000', 'vl' * 1000)
+
+    def request_discovery(self):
         """This function listens for remote client discovery message and responses
         with the server address"""
 
@@ -81,117 +211,25 @@ class Server(app.App):
                     ('255.255.255.255', client_connection[1])
                 )
 
-    def run(self):
-        self.thread_discovery.start()
-        self.interface.start()
+    def request_login(self, command_type, request_data):
+        """Handle the login command
 
-        with self.main_socket:
-            self.main_socket.listen()
-            while self.system_on:
-                try:    
-                    # Accept connection from clients
-                    conn, _ = self.main_socket.accept()
-
-                    # Reached maximum connection allowed
-                    if len(self.clients) == self.MAX_CLIENT_THREAD:
-                        # Notify the client that the maximum has reached
-                        conn.send(util.package('001', self.status_messages['001'], ''))
-
-                        # Close the connection
-                        conn.close()
-                        continue
-                    else:
-                        # It's OK
-                        conn.send(util.package('000', '', ''))
-                    
-                    with self.lock:
-                        self.interface.f_stat.inc_totalconnections()
-
-                    # Start a thread for the accepted client
-                    thread = threading.Thread(target=self.serve, args=(conn,))
-                    thread.start()
-                    # thread.join()
-
-                    # Initialize the user identification associated with the thread
-                    self.clients[thread.ident] = ('', '', '')
-                except socket.timeout:
-                    continue
-                except Exception:
-                    self.system_on = False
-
-    def exit(self):
-        self.interface.root.destroy()
-        with self.lock:
-            print('Here')
-            self.system_on = False
-            print('At here')
-
-    def update_record(self, conn, command):
-        self.interface.f_useractivities.t_activities.add_row((
-            conn.getpeername()[0],
-            command,
-            datetime.datetime.now().isoformat()
-        ))
-        self.interface.f_stat.inc_requestsmade()
-
-    def serve(self, conn: socket.socket):
-        """Target function for threads that communicate with client
-        
         Parameters
         ----------
-        conn : socket.socket
-            The TCP socket that is communicating with the client
+        command_type : str
+            
+        data : str
         
         Returns
         -------
-        None
+        tuple
+            A tuple of (status_code, response_data)
         """
-        
-        try:
-            with conn:
-                while self.system_on:
-                    # Extract request message
-                    m = self.receive_from(conn)
-                    command, command_type, _, data = util.extract(m)
 
-                    # Update the GUI statistics
-                    self.update_record(conn, command)
-
-                    # Do the request
-                    t = self.requests[command](command_type, data)
-
-
-                    # Response
-                    response = util.package(t[0], self.status_messages[t[0]], t[1])
-                    conn.send(response)
-        except app.ConnectionError:
-            with self.lock:
-                self.interface.f_stat.dec_totalconnections()
-            # Remove the thread
-            self.clients.pop(threading.current_thread().ident)
-        
-
-    def test(self, command_type, data):
-        return ('000', 'vl' * 1000)
-
-    def logged_in(self, username) -> bool:
-        """Check if the username has already logged in (in the current thread or other thread)
-
-        Returns
-        -------
-        bool
-            True if the client has already logged in, False otherwise
-        """
-        for v in self.clients.values():
-            if username in v:
-                return True
-        return False
-    
-    def request_login(self, command_type, data):
         status_code = ''
-        result = ''
+        response_data = ''
 
-        username, password = data.split(',', 1)
+        username, password = request_data.split(',', 1)
         if self.logged_in(username):
             return ('101', '')
 
@@ -213,92 +251,153 @@ class Server(app.App):
                 )
 
                 # Increase active users
-                self.interface.f_stat.inc_activeusers()
+                self.main_window.f_stat.inc_activeusers()
                 
-                result = f'{username},{user_info[0][1]}\n'                
+                response_data = f'{username},{user_info[0][1]}\n'                
                 status_code = '000'
             else:
                 status_code = '100'
-        return (status_code, result)
+        return (status_code, response_data)
 
-    def request_signup(self, command_type, data):
-        name, username, password = data.split(',', 2)
+    def request_signup(self, command_type, request_data):
+        """Handle the signup command
+
+        Parameters
+        ----------
+        command_type : str
+            
+        request_data : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, response_data)
+        """
+
+        name, username, password = request_data.split(',', 2)
         with database.Database(self.DATABASE_PATH) as db:
-            result = db.sign_up(username, password, name)
-            if result:
+            response_data = db.sign_up(username, password, name)
+            if response_data:
                 return ('000', '')
             return ('102', '')
 
-    def request_logout(self, command_type, data):
+    def request_logout(self, command_type, request_data):
+        """Handle the logout command
+
+        Parameters
+        ----------
+        command_type : str
+            
+        request_data : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, response_data)
+        """
+
         # Get user info corresponding to the thread
-        r = self.clients[threading.current_thread().ident]
+        user_info = self.clients[threading.current_thread().ident]
 
         # User is not currently logged in
-        if r == ('', '', ''):
+        if user_info == ('', '', ''):
             return ('103', '')
         else:
+            # Remove the user info associated with the thread
             self.clients[threading.current_thread().ident] = ('', '', '')
             
             # Decrease active users
-            self.interface.f_stat.dec_activeusers()
+            self.main_window.f_stat.dec_activeusers()
             return ('000', '')
 
-    def request_query(self, command_type, data):
+    def request_query(self, command_type, request_data):
+        """Handle the query command
+
+        Parameters
+        ----------
+        command_type : str
+            
+        request_data : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, response_data)
+        """
+
         status_code = ''
-        result = ''
+        response_data = ''
         with database.Database(self.DATABASE_PATH) as db:
             if command_type == 'city':
                 # data contains the keyword to search
-                r = db.search_city(data)
+                r = db.search_city(request_data)
                 num_city = len(r)
 
-                result = str(num_city) + '\n'
+                response_data = str(num_city) + '\n'
                 for city in r:
-                    result += ','.join([str(x) for x in city]) + '\n'
+                    response_data += ','.join([str(x) for x in city]) + '\n'
                 status_code = '000'
             
             elif command_type == 'weather':
                 # data contains the date in YYYY-MM-DD format
-                r = db.weather_by_date(data)
+                r = db.weather_by_date(request_data)
                 num_city = len(r)
 
-                result = str(num_city) + '\n'
+                response_data = str(num_city) + '\n'
                 for city in r:
-                    result += ','.join([str(x) for x in city]) + '\n'
+                    response_data += ','.join([str(x) for x in city]) + '\n'
                 status_code = '000'
             
             elif command_type == 'forecast':
                 # data contains the city id
-                r = db.forecast(int(data))
+                r = db.forecast(int(request_data))
                 num_result = len(r)
 
-                result = str(num_result) + '\n'
+                response_data = str(num_result) + '\n'
                 for entry in r:
-                    result += ','.join([str(x) for x in entry]) + '\n'
+                    response_data += ','.join([str(x) for x in entry]) + '\n'
                 status_code = '000'
         
-        return (status_code, result)
+        return (status_code, response_data)
 
-    def request_update(self, command_type, data):
+    def request_update(self, command_type, request_data):
+        """Handle the update command
+
+        Parameters
+        ----------
+        command_type : str
+            
+        request_data : str
+            
+
+        Returns
+        -------
+        tuple
+            A tuple of (status_code, response_data)
+        """
+
         # Check user's priviledge
         if self.clients[threading.current_thread().ident][1] != 'admin':
             return ('300', '')
 
         status_code = ''
-        result = ''
+        response_data = ''
         with self.lock:
             with database.Database(self.DATABASE_PATH) as db:
                 if command_type == 'city':
-                    s = data.split(',', 4)
+                    s = request_data.split(',', 4)
                     s[3] = float(s[3])
                     s[4] = float(s[4])
                     s = tuple(s)
                     status_code = '000' if db.add_city(s) else '301'
                 elif command_type == 'weather':
-                    city_id, date, rest = data.split(',', 2)
+                    city_id, date, rest = request_data.split(',', 2)
                     status_code = '000' if db.update_weather(city_id, date, tuple(rest.split(','))) else '301'
 
-        return (status_code, result)
+        return (status_code, response_data)
 
 if __name__ == '__main__':
     s = Server()
