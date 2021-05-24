@@ -12,7 +12,7 @@ class Server(app.App):
     def __init__(self):
         super().__init__()
 
-        self.DATABASE_PATH = 'db/wether.db'
+        self.DATABASE_PATH = 'db/weather.db'
         self.SERVER_ADDRESS = socket.gethostbyname(socket.gethostname())
         self.MAX_CLIENT_THREADS = 2
 
