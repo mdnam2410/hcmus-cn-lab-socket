@@ -1,6 +1,7 @@
 import datetime
 import socket
 import tkinter as tk
+from tkinter import messagebox
 
 import app
 import util
@@ -44,6 +45,10 @@ class Client(app.App):
 
         # Create all the windows and widgets
         self.create_gui()
+        self.root.report_callback_exception = self.report_callback_exception
+
+    def report_callback_exception(self, exc, val, tb):
+        messagebox.showerror('Error', val)
 
 
     # ---------- GUI definition methods ------------
@@ -429,13 +434,17 @@ class Client(app.App):
 
         # Create an UDP socket
         u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        u.settimeout(1.0)
 
         # Broadcast the discovery message
         u.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         u.sendto(util.package('discover', '', ''), ('255.255.255.255', self.DISCOVERY_PORT))
 
         # Receive the acknowledgement message from the server
-        message, _ = u.recvfrom(1024)
+        try:
+            message, _ = u.recvfrom(1024)
+        except socket.timeout:
+            return None
         util.print_message(message)
 
         # Extract the acknowledgement message
@@ -716,8 +725,12 @@ class Client(app.App):
         return status_code, status_message
         
 if __name__ == '__main__':
-    root = tk.Tk()
-    root.title('Client')
-    client = Client(root)
-    root.withdraw()
-    root.mainloop()
+    try:
+        root = tk.Tk()
+        root.title('Client')
+        client = Client(root)
+        root.withdraw()
+        root.mainloop()
+    except Exception as e:
+        root.withdraw()
+        messagebox.showerror('Error', e)
