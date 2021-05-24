@@ -47,6 +47,8 @@ class Client(app.App):
         self.create_gui()
         self.root.report_callback_exception = self.report_callback_exception
 
+    # ---------- Utility methods ---------
+
     def report_callback_exception(self, exc, val, tb):
         messagebox.showerror('Error', val)
 
@@ -423,13 +425,25 @@ class Client(app.App):
     # ---------- Methods to make requests to the server ----------
 
     def discover_server(self) -> socket.socket:
-        """ This function mimics the behavior of a DNS client when it tries to
+        """This function mimics the behavior of a DNS client when it tries to
         find a DNS server on the same network. The client broadcasts a discovery message
         into the network using UDP, and if the server receives, it will reply with an
         acknowledgement message along with its IP address. The client then tries to create
         a TCP connection to this address.
         If the protocol is carried out successfully, the function returns a new socket
         object for the newly-created TCP connection. Otherwise, None is returned.
+        
+        Returns
+        -------
+        socket.socket
+            A TCP socket connected to the server
+        None
+            Returns on failure
+
+        Raises
+        ------
+        app.ConnectionError
+            Raises this exception if there is no connection
         """
 
         # Create an UDP socket
@@ -437,8 +451,11 @@ class Client(app.App):
         u.settimeout(1.0)
 
         # Broadcast the discovery message
-        u.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        u.sendto(util.package('discover', '', ''), ('255.255.255.255', self.DISCOVERY_PORT))
+        try:
+            u.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            u.sendto(util.package('discover', '', ''), ('255.255.255.255', self.DISCOVERY_PORT))
+        except OSError:
+            raise app.ConnectionError('No connection')
 
         # Receive the acknowledgement message from the server
         try:
