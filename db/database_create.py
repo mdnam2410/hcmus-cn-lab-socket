@@ -1,7 +1,7 @@
 import sqlite3
 
 # Connect to database
-con = sqlite3.connect("wether.db")
+con = sqlite3.connect('weather.db')
 
 # Create a cursor
 cur = con.cursor()

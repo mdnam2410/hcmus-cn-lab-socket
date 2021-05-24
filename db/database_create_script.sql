@@ -1,55 +1,44 @@
 
 -- User and admin information
--- Admin's username contains all numbers
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE user (
     username TEXT PRIMARY KEY,
-    password TEXT,
-    name     TEXT
+    password TEXT NOT NULL,
+    name     TEXT NOT NULL
 );
 
 -- Country code using Alpha-2 format from ISO 3166-1
-CREATE TABLE IF NOT EXISTS country (
+CREATE TABLE country (
     country_code TEXT PRIMARY KEY,
-    country_name TEXT
+    country_name TEXT NOT NULL
 );
 
 -- City information
-CREATE TABLE IF NOT EXISTS city (
+CREATE TABLE city (
     city_id      INTEGER PRIMARY KEY,
-    city_name    TEXT,
-    country_code TEXT,
+    city_name    TEXT NOT NULL,
+    country_code TEXT NOT NULL,
     lat          REAL, -- Latitude
     lon          REAL, -- Longitude
 
-    FOREIGN KEY(country_code) REFERENCES country(country_code)
+    FOREIGN KEY(country_code) REFERENCES country(country_code) ON DELETE CASCADE
 );
 
--- User's favorite city (admin does not have this feature)
-CREATE TABLE IF NOT EXISTS favorite_city (
-    username TEXT,
-    city_id  INTEGER,
-
-    PRIMARY KEY(username, city_id),
-    FOREIGN KEY(username) REFERENCES user(username),
-    FOREIGN KEY(city_id) REFERENCES city(city_id)
-);
-
-CREATE TABLE IF NOT EXISTS weather_condition (
-    weather_id  TEXT PRIMARY KEY,
-    main        TEXT,
+CREATE TABLE weather_condition (
+    weather_id  INTEGER PRIMARY KEY,
+    main        TEXT NOT NULL,
     description TEXT,
     icon        TEXT
 );
 
-CREATE TABLE IF NOT EXISTS city_weather (
+CREATE TABLE city_weather (
     city_id       INTEGER,
     report_date   TEXT,
     weather_id    TEXT,
-    min_degree    REAL,
-    max_degree    REAL,
-    precipitation REAL,
+    min_degree    REAL CHECK(min_degree > -273.15),
+    max_degree    REAL CHECK(max_degree > -273.15 AND max_degree >= min_degree),
+    precipitation REAL CHECK(precipitation BETWEEN 0 AND 1),
 
-    PRIMARY KEY(city_id, report_date, weather_id),
-    FOREIGN KEY(city_id) REFERENCES city(city_id),
-    FOREIGN KEY(weather_id) REFERENCES weather_info(weather_id)
+    PRIMARY KEY(city_id, report_date),
+    FOREIGN KEY(city_id) REFERENCES city(city_id) ON DELETE CASCADE,
+    FOREIGN KEY(weather_id) REFERENCES weather_condition(weather_id) ON DELETE SET NULL
 );

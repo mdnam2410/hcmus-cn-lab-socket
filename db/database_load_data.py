@@ -21,7 +21,14 @@ for obj in json_file:
     cities.append(city)
 # print(cities)
 
-con = sqlite3.connect("wether.db")
+# Load weather conditions
+weather_conditions = []
+with open('../resources/weather_conditions.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    for row in csv_reader:
+        weather_conditions.append(row)
+
+con = sqlite3.connect('weather.db')
 cur = con.cursor()
 
 country_script = """
@@ -33,5 +40,11 @@ city_script = """
 INSERT INTO city(city_id, city_name, country_code, lat, lon) VALUES (?, ?, ?, ?, ?);
 """
 cur.executemany(city_script, cities)
+
+weather_script = '''
+INSERT INTO weather_condition(weather_id, main) VALUES (?, ?);
+'''
+cur.executemany(weather_script, weather_conditions)
+
 con.commit()
 con.close()
