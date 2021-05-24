@@ -14,7 +14,6 @@ class Database:
         self.con = None
         try:
             self.con = sqlite3.connect(database_path)
-            self.con.row_factory = sqlite3.Row
             self.cur = self.con.cursor()
             self.cur.execute('PRAGMA foreign_keys = 1')
         except sqlite3.Error:
@@ -302,11 +301,6 @@ class Database:
             return False
 
 if __name__ == '__main__':
-    with Database('db/wether.db') as db:
-        city_id = input('City ID: ')
-        city_name = input('City name: ')
-        country_code = input('Country code: ')
-        lat = float(input('Latitude: '))
-        lon = float(input('Longitude: '))
-
-        print('OK' if db.add_city((city_id, city_name, country_code, lat, lon)) else 'Not OK')
+    with Database('db/temp.db') as db:
+        r = db.today_weather()
+        print(r)
