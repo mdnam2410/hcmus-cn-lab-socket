@@ -2,6 +2,7 @@ import datetime
 import socket
 import tkinter as tk
 from tkinter import messagebox
+from ttkbootstrap import Style
 
 import app
 import util
@@ -31,6 +32,8 @@ class Client(app.App):
 
         # The root window
         self.root = root
+
+        self.style = Style(theme='lumen')
 
         # Find and try to connect to the server
         self.main_socket = self.discover_server()

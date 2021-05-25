@@ -6,6 +6,10 @@ import threading
 import tkinter as tk
 import tkinter.font
 import tkinter.ttk as ttk
+from ttkbootstrap import Style
+
+BOLD14 = {'font': 'Helvetica 14 bold'}
+BOLD12 = {'font': 'Helvetica 12 bold'}
 
 # ------------ Client widgets ------------
 
@@ -26,15 +30,15 @@ class Login(ttk.Frame):
 
         # Label to display message
         self.v_prompt = tk.StringVar()
-        self.l_prompt = ttk.Label(self, textvariable=self.v_prompt, foreground='red')
+        self.l_prompt = ttk.Label(self, textvariable=self.v_prompt, style='danger.TLabel')
 
         # Login button
         self.v_logintype = tk.StringVar(value='Log in')
         self.b_login = ttk.Button(self, textvariable=self.v_logintype)
 
         # Alternative options
-        self.l_signup = ttk.Label(self, text='Sign up', underline=1)
-        self.l_adminlogin = ttk.Label(self, text='Log in as admin', underline=1)
+        self.l_signup = ttk.Label(self, text='Sign up', style='info.TLabel')
+        self.l_adminlogin = ttk.Label(self, text='Log in as admin', style='info.TLabel')
 
         self.display()
 
@@ -84,7 +88,7 @@ class Signup(ttk.Frame):
         self.b_signup = ttk.Button(self, text='Sign up')
 
         # Back label
-        self.l_back = ttk.Label(self, text='< Back')
+        self.l_back = ttk.Label(self, text='Back', style='info.TLabel')
 
         self.display()
 
@@ -117,9 +121,9 @@ class Welcome(ttk.Frame):
         self.master = master
 
         # Labels
-        self.l_welcome = ttk.Label(self, text='Welcome')
+        self.l_welcome = ttk.Label(self, text='Welcome,', style='secondary.TLabel')
         self.v_name = tk.StringVar(value='name')
-        self.l_name = ttk.Label(self, textvariable=self.v_name)
+        self.l_name = ttk.Label(self, textvariable=self.v_name, **BOLD14)
 
         # Buttons
         self.b_logout = ttk.Button(self, text='Log out')
@@ -204,7 +208,7 @@ class Weather(ttk.Frame):
         self.master = master
 
         # Label
-        self.l_weather = ttk.Label(self, text='Weather')
+        self.l_weather = ttk.Label(self, text='Weather', **BOLD14)
 
         # Day spinbox
         self.today = datetime.date.today()
@@ -242,7 +246,7 @@ class Forecast(ttk.Frame):
         self.recent_cities = {}
 
         # Label
-        self.l_forecast = ttk.Label(master=self, text='Forecast')
+        self.l_forecast = ttk.Label(master=self, text='Forecast', **BOLD14)
 
         # Search bar
         self.v_searchkeyword = tk.StringVar()
@@ -301,7 +305,7 @@ class AdminTools(ttk.Frame):
 
         # ---------- Common label for displaying command's status ----------
         self.v_status = tk.StringVar()
-        self.l_status = ttk.Label(self, textvariable=self.v_status)
+        self.l_status = ttk.Label(self, textvariable=self.v_status, style='danger.TLabel')
 
         self.display()
 
@@ -348,7 +352,7 @@ class UserActivities(ttk.Frame):
         self.master = master
 
         # Title
-        self.l_activeusers = ttk.Label(self, text='User Activities')
+        self.l_activeusers = ttk.Label(self, text='User Activities', **BOLD14)
 
         # Table
         self.HEADINGS = ['Client', 'Activity Type', 'Time']
@@ -376,9 +380,9 @@ class Statistics(ttk.Frame):
         self.v_activeusers = tk.IntVar(value=0)
         self.v_requestsmade = tk.IntVar(value=0)
 
-        self.l_totalconnections = ttk.Label(self, textvariable=self.v_totalconnections)
-        self.l_activeusers = ttk.Label(self, textvariable=self.v_activeusers)
-        self.l_requestsmade = ttk.Label(self, textvariable=self.v_requestsmade)
+        self.l_totalconnections = ttk.Label(self, textvariable=self.v_totalconnections, **BOLD12)
+        self.l_activeusers = ttk.Label(self, textvariable=self.v_activeusers, **BOLD12)
+        self.l_requestsmade = ttk.Label(self, textvariable=self.v_requestsmade, **BOLD12)
 
         self.display()
 
@@ -434,6 +438,8 @@ class ServerWindow(threading.Thread):
         self.root.title('Server')
         self.root.geometry('500x300')
         self.root.protocol('WM_DELETE_WINDOW', self.callback)
+
+        self.style = Style(theme='lumen')
 
         self.root.rowconfigure(0, weight=1)
         self.root.rowconfigure(1, weight=1)
