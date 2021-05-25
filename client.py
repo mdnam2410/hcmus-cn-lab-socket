@@ -7,6 +7,10 @@ import app
 import util
 import widget
 
+class ClientError(Exception):
+    """Generic class for any error handled in client-side
+    """
+    pass
 
 class Client(app.App):
     def __init__(self, root):
@@ -45,7 +49,7 @@ class Client(app.App):
 
         # Create all the windows and widgets
         self.create_gui()
-        # self.root.report_callback_exception = self.report_callback_exception
+        self.root.report_callback_exception = self.report_callback_exception
 
     # ---------- Utility methods ---------
 
@@ -271,7 +275,7 @@ class Client(app.App):
 
         result = self.log_out()
         if type(result) is tuple:
-            print(result) # TODO: do something here
+            raise ClientError(f'{result[1]}.\nError code: {result[0]}')
         else:
             self.root.withdraw()
             self.create_login_window()
@@ -351,7 +355,7 @@ class Client(app.App):
         # Contact the server
         result = self.query_weather_by_date(day_iso)
         if type(result) is tuple:
-            raise Exception(result[1]) # TODO: raise another exception or define a new one
+            raise ClientError(f'{result[1]}.\nError code: {result[0]}')
         else:
             self.f_weather.t_weather.remove_all()
             numcity, cities = result.split('\n', 1)
@@ -412,7 +416,7 @@ class Client(app.App):
 
         result = self.forecast(city_id)
         if type(result) is tuple:
-            print(result) # TODO: do something with this
+            raise ClientError(f'{result[1]}.\nError code: {result[0]}')
         else:
             num_result, weather_info = result.split('\n', 1)
             if num_result == '0':
