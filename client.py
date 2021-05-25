@@ -45,7 +45,7 @@ class Client(app.App):
 
         # Create all the windows and widgets
         self.create_gui()
-        self.root.report_callback_exception = self.report_callback_exception
+        # self.root.report_callback_exception = self.report_callback_exception
 
     # ---------- Utility methods ---------
 
@@ -359,7 +359,8 @@ class Client(app.App):
                 self.f_weather.t_weather.add_row(('No data',))
             else:
                 for city in cities.splitlines():
-                    self.f_weather.t_weather.add_row(city.split(','))
+                    _, city_name, country, _, weather_description, min_degree, max_degree, precipitation = city.split(',')
+                    self.f_weather.t_weather.add_row((city_name, country, weather_description, min_degree, max_degree, precipitation))
 
     def command_fforecast_csearchbar_onreturn(self, event):
         """Actions taken when hitting return in the Search combobox in the Forecast frame
@@ -417,9 +418,9 @@ class Client(app.App):
             if num_result == '0':
                 print('0')
             else:
-                for d in weather_info:
-                    _, _, _, day, min_degree, max_degree, precipitation = d.split(',')
-                    self.f_forecast.t_forecast.add_row((day, min_degree, max_degree, precipitation))
+                for d in weather_info.splitlines():
+                    _, _, _, day, weather_description, min_degree, max_degree, precipitation = d.split(',')
+                    self.f_forecast.t_forecast.add_row((day, weather_description, min_degree, max_degree, precipitation))
 
 
     # ---------- Methods to make requests to the server ----------
