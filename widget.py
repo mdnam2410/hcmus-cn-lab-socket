@@ -276,16 +276,16 @@ class AdminTools(ttk.Frame):
         self.master = master
 
         # The Admin Tools frame contains two smaller frames
-        self.f_addcity = tk.LabelFrame(self, text='Add city')
-        self.f_editweather = tk.LabelFrame(self, text='Edit weather information')
+        self.f_addcity = tk.LabelFrame(self, text='Add city', **BOLD12)
+        self.f_editweather = tk.LabelFrame(self, text='Edit weather information', **BOLD12)
 
         # ---------- Add City frame's widgets ----------
         # Entries
-        self.e_cityid1 = ttk.Entry(self.f_addcity)
-        self.e_cityname = ttk.Entry(self.f_addcity)
-        self.e_country = ttk.Entry(self.f_addcity)
-        self.e_lat = ttk.Entry(self.f_addcity)
-        self.e_lon = ttk.Entry(self.f_addcity)
+        self.e_cityid1 = ttk.Entry(self.f_addcity, width=35)
+        self.e_cityname = ttk.Entry(self.f_addcity, width=35)
+        self.e_country = ttk.Entry(self.f_addcity, width=35)
+        self.e_lat = ttk.Entry(self.f_addcity, width=35)
+        self.e_lon = ttk.Entry(self.f_addcity, width=35)
 
         # Buttons
         self.b_add = ttk.Button(self.f_addcity, text='Add')
@@ -293,29 +293,37 @@ class AdminTools(ttk.Frame):
 
         # ----------- Edit Weather frame's widgets ----------
         # Entries
-        self.e_cityid2 = ttk.Entry(self.f_editweather)
-        self.e_date = ttk.Entry(self.f_editweather)
-        self.e_weather = ttk.Entry(self.f_editweather)
-        self.e_mindegree = ttk.Entry(self.f_editweather)
-        self.e_maxdegree = ttk.Entry(self.f_editweather)
-        self.e_precipitation = ttk.Entry(self.f_editweather)
+        self.e_cityid2 = ttk.Entry(self.f_editweather, width=35)
+        self.e_date = ttk.Entry(self.f_editweather, width=35)
+        self.e_weather = ttk.Entry(self.f_editweather, width=35)
+        self.e_mindegree = ttk.Entry(self.f_editweather, width=35)
+        self.e_maxdegree = ttk.Entry(self.f_editweather, width=35)
+        self.e_precipitation = ttk.Entry(self.f_editweather, width=35)
 
         # Buttons
         self.b_update = ttk.Button(self.f_editweather, text='Update')
 
         # ---------- Common label for displaying command's status ----------
         self.v_status = tk.StringVar()
-        self.l_status = ttk.Label(self, textvariable=self.v_status, style='danger.TLabel')
+        self.l_status = ttk.Label(self, textvariable=self.v_status)
 
         self.display()
 
     def display(self):
+        self.rowconfigure(0, weight=1, pad=7)
+        self.rowconfigure(1, weight=1, pad=7)
+        self.columnconfigure(0, weight=1, pad=7)
+
         self.f_addcity.grid(row=0, column=0, sticky='nsew')
         self.f_editweather.grid(row=1, column=0, sticky='nsew')
         self.l_status.grid(row=2, column=0, sticky='w')
 
         # ----------- Add city -----------
-        self.f_addcity.columnconfigure(1, weight=1, minsize=70)
+        for i in range(0, 6):
+            self.f_addcity.rowconfigure(i, pad=7)
+        
+        self.f_addcity.columnconfigure(0, pad=7)
+        self.f_addcity.columnconfigure(1, weight=1, pad=7, minsize=100)
 
         labels1 = ['City ID', 'City name', 'Country code', 'Latitude', 'Longitude']
         addcity_entries = [
@@ -328,7 +336,11 @@ class AdminTools(ttk.Frame):
         self.b_add.grid(row=5, column=1, sticky='e')
         
         # ----------- Edit weather ----------
-        self.f_editweather.columnconfigure(1, weight=1, minsize=70)
+        for i in range(0, 7):
+            self.f_editweather.rowconfigure(i, pad=7)
+        
+        self.f_editweather.columnconfigure(0, pad=7)
+        self.f_editweather.columnconfigure(1, weight=1, pad=7, minsize=100)
 
         labels2 = ['City ID', 'Date (YYYY-MM-DD)', 'Weather ID', 'Min degree', 'Max degree', 'Precipitation']
         editweather_entries = [

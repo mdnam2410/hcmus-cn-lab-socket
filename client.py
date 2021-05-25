@@ -125,8 +125,8 @@ class Client(app.App):
         self.w_admintools = tk.Toplevel(self.root)
         self.w_admintools.title('Admin Tools')
 
-        self.w_admintools.rowconfigure(0, weight=1)
-        self.w_admintools.columnconfigure(0, weight=1)
+        self.w_admintools.rowconfigure(0, weight=1, pad=7)
+        self.w_admintools.columnconfigure(0, weight=1, pad=7)
 
         # Admin Tools window has one frame
         self.f_admintools = widget.AdminTools(self.w_admintools)
