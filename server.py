@@ -93,6 +93,15 @@ class Server(app.App):
                 return True
         return False
 
+    def current_thread_has_user_logged_in(self):
+        """Check if user has logged in in the current thread
+
+        Returns
+        -------
+        bool
+        """
+
+        return self.clients[threading.current_thread().ident] != ('', '', '')
 
     # ----------- Starting and exiting methods ----------
 
@@ -178,7 +187,8 @@ class Server(app.App):
             with self.lock:
                 if self.main_window.is_alive():
                     self.main_window.f_stat.dec_totalconnections()
-                    self.main_window.f_stat.dec_activeusers()
+                    if self.current_thread_has_user_logged_in():
+                        self.main_window.f_stat.dec_activeusers()
 
             # Remove the thread
             self.clients.pop(threading.current_thread().ident)
@@ -298,11 +308,8 @@ class Server(app.App):
             A tuple of (status_code, response_data)
         """
 
-        # Get user info corresponding to the thread
-        user_info = self.clients[threading.current_thread().ident]
-
         # User is not currently logged in
-        if user_info == ('', '', ''):
+        if not self.current_thread_has_user_logged_in():
             return ('103', '')
         else:
             # Remove the user info associated with the thread
