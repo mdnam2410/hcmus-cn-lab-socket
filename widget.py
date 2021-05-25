@@ -402,7 +402,6 @@ class Statistics(ttk.Frame):
 
     def display(self):
         for i in range(0, 2):
-            self.rowconfigure(i, weight=1)
             self.columnconfigure(i, weight=1)
 
         ttk.Label(self, text='Total Connections').grid(row=0, column=0, columnspan=2)
@@ -432,6 +431,8 @@ class ServerWindow(threading.Thread):
 
     def run(self):
         self.root = tk.Tk()
+        self.root.title('Server')
+        self.root.geometry('500x300')
         self.root.protocol('WM_DELETE_WINDOW', self.callback)
 
         self.root.rowconfigure(0, weight=1)
