@@ -73,12 +73,14 @@ class Server(app.App):
             The command requested by the client.
         """
 
-        self.main_window.f_useractivities.t_activities.add_row((
-            conn.getpeername()[0],
-            command,
-            datetime.datetime.now().isoformat()
-        ))
-        self.main_window.f_stat.inc_requestsmade()
+        if self.main_window.is_alive():
+            with self.lock:
+                self.main_window.f_useractivities.t_activities.add_row((
+                    conn.getpeername()[0],
+                    command,
+                    datetime.datetime.now().isoformat()
+                ))
+                self.main_window.f_stat.inc_requestsmade()
 
     def logged_in(self, username) -> bool:
         """Check if the username has already logged in (in the current thread or other thread)
@@ -261,7 +263,8 @@ class Server(app.App):
                 )
 
                 # Increase active users
-                self.main_window.f_stat.inc_activeusers()
+                if self.main_window.is_alive():
+                    self.main_window.f_stat.inc_activeusers()
                 
                 response_data = f'{username},{user_info[0][1]}\n'                
                 status_code = '000'
@@ -316,7 +319,8 @@ class Server(app.App):
             self.clients[threading.current_thread().ident] = ('', '', '')
             
             # Decrease active users
-            self.main_window.f_stat.dec_activeusers()
+            if self.main_window.is_alive():
+                self.main_window.f_stat.dec_activeusers()
             return ('000', '')
 
     def request_query(self, command_type, request_data):
