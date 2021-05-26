@@ -174,7 +174,7 @@ class Client(app.App):
         self.create_login_window()
 
     def command_wconnnecttoserver_lautoconnect(self, event):
-        self.main_socket = self.discover_server()
+        self.main_socket = self.auto_connect()
         self.w_connecttoserver.destroy()
         self.create_login_window()
 
@@ -506,14 +506,8 @@ class Client(app.App):
             s.close()
             raise app.ConnectionError('Unknown error.')
 
-    def discover_server(self) -> socket.socket:
-        """This function mimics the behavior of a DNS client when it tries to
-        find a DNS server on the same network. The client broadcasts a discovery message
-        into the network using UDP, and if the server receives, it will reply with an
-        acknowledgement message along with its IP address. The client then tries to create
-        a TCP connection to this address.
-        If the protocol is carried out successfully, the function returns a new socket
-        object for the newly-created TCP connection. Otherwise, None is returned.
+    def auto_connect(self) -> socket.socket:
+        """Find and attempt establishing a connection to the server in the same network.
         
         Returns
         -------
@@ -523,6 +517,13 @@ class Client(app.App):
         Raises
         ------
         app.ConnectionError
+
+
+        This function is inspired by the ARP protocol. It attempts to automate the task of connecting
+        to the server, without having to explicitly input the server address. To find the server, the client
+        first broadcasts a "discovery" message into the network using UDP on port DISCOVERY_PORT.
+        The server, if listening, responses to the client a "discovery acknowledgement" message, along with its
+        IP address. The client can then use this address to establish a TCP connection to the server.
         """
 
         # Create an UDP socket
