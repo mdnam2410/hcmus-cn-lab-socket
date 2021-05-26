@@ -13,6 +13,30 @@ BOLD12 = {'font': 'Helvetica 12 bold'}
 
 # ------------ Client widgets ------------
 
+class ConnectToServer(ttk.Frame):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.master = master
+
+        self.l_connect = ttk.Label(self, text='Server address')
+        self.v_address = tk.StringVar()
+        self.e_address = ttk.Entry(self, textvariable=self.v_address, width=35)
+        self.b_connect = ttk.Button(self, text='Connect')
+        self.l_autoconnect = ttk.Label(self, text='Connect automatically', style='info.TLabel')
+
+        self.display()
+
+    def display(self):
+        for i in range(0, 3):
+            self.rowconfigure(i, pad=7)
+        self.columnconfigure(1, weight=1, minsize=80, pad=7)
+        
+        self.l_connect.grid(row=0, column=0, sticky='w')
+        self.e_address.grid(row=0, column=1)
+        self.b_connect.grid(row=1, column=1)
+        self.l_autoconnect.grid(row=2, column=0, columnspan=2)
+
+
 class Login(ttk.Frame):
     """Define the layout of the Login
     """
@@ -465,6 +489,9 @@ class ServerWindow(threading.Thread):
         self.root.mainloop()
 
 if __name__ == '__main__':
-    # Test area
-    pass
+    root = tk.Tk()
+    c = ConnectToServer(root)
+    c.pack()
+    root.mainloop()
+
     

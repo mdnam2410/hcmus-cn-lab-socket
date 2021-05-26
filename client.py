@@ -35,16 +35,16 @@ class Client(app.App):
 
         self.style = Style(theme='lumen')
 
-        # Find and try to connect to the server
-        self.main_socket = self.discover_server()
-        if self.main_socket is None:
-            raise app.ConnectionError('Unable to connect to server')
+        # # Find and try to connect to the server
+        # self.main_socket = self.discover_server()
+        # if self.main_socket is None:
+        #     raise app.ConnectionError('Unable to connect to server')
         
-        # Check if the maximum number of clients the server can serve is reached
-        status_code, status_message, _, _ = util.extract(self.receive())
-        if status_code != '000':
-            self.main_socket.close()
-            raise app.ConnectionError(status_message)
+        # # Check if the maximum number of clients the server can serve is reached
+        # status_code, status_message, _, _ = util.extract(self.receive())
+        # if status_code != '000':
+        #     self.main_socket.close()
+        #     raise app.ConnectionError(status_message)
 
         # User identity
         self.username = ''
@@ -61,6 +61,21 @@ class Client(app.App):
 
 
     # ---------- GUI definition methods ------------
+
+    def create_connect_to_server_window(self):
+        # Create toplevel window
+        self.w_connecttoserver = tk.Toplevel(self.root)
+        self.w_connecttoserver.title('Connect to server')
+        self.w_connecttoserver.resizable(False, False)
+
+        # Create the frame
+        self.f_connecttoserver = widget.ConnectToServer(self.w_connecttoserver)
+        self.f_connecttoserver.pack()
+
+        # Bind commands
+        self.w_connecttoserver.protocol('WM_DELETE_WINDOW', self.command_wconnecttoserver_onclosing)
+        self.f_connecttoserver.b_connect.configure(command=self.command_wconnecttoserver_bconnect)
+        self.f_connecttoserver.l_autoconnect.bind('<Button-1>', self.command_wconnnecttoserver_lautoconnect)
 
     def create_login_window(self):
         # Create the Login window as toplevel of root
@@ -142,7 +157,7 @@ class Client(app.App):
         self.f_admintools.grid(row=0, column=0, sticky='nsew')
 
     def create_gui(self):
-        self.create_login_window()
+        self.create_connect_to_server_window()
 
         for i in range(0, 3):
             self.root.rowconfigure(i, pad=7, weight=1)
@@ -151,6 +166,21 @@ class Client(app.App):
 
 
     # ---------- Commands used by widgets ----------
+
+    def command_wconnecttoserver_bconnect(self):
+        server_address = self.f_connecttoserver.v_address.get()
+        self.main_socket = self.connect(server_address)
+        self.w_connecttoserver.destroy()
+        self.create_login_window()
+
+    def command_wconnnecttoserver_lautoconnect(self, event):
+        self.main_socket = self.discover_server()
+        self.w_connecttoserver.destroy()
+        self.create_login_window()
+
+    def command_wconnecttoserver_onclosing(self):
+        self.w_connecttoserver.destroy()
+        self.root.destroy()
 
     def command_wlogin_onclosing(self):
         """Actions taken when closing the Login window
@@ -432,6 +462,50 @@ class Client(app.App):
 
     # ---------- Methods to make requests to the server ----------
 
+    def connect(self, server_address):
+        """Attempt to establish a TCP connnection to the server at server_address
+
+        Parameters
+        ----------
+        server_address : str
+            The address of the server
+
+        Returns
+        -------
+        socket.socket
+            New socket that can be used to communicate with the server
+
+        Raises
+        ------
+        app.ConnectionError
+        """
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(5.0)
+            s.connect((server_address, self.SERVER_PORT))
+
+            status_code, status_message, _, _ = util.extract(self.receive_from(s))
+            if status_code != '000':
+                s.close()
+                raise app.ConnectionError(status_message)
+            return s
+        except ConnectionRefusedError:
+            s.close()
+            raise app.ConnectionError('Cannot connect to this address. Connection refused.')
+        except OSError as e:
+            s.close()
+            raise app.ConnectionError(f'Network error.\nError: {e}')
+        except socket.timeout:
+            s.close()
+            raise app.ConnectionError('Connection timed out.')
+        except app.ConnectionError:
+            s.close()
+            raise
+        except Exception:
+            s.close()
+            raise app.ConnectionError('Unknown error.')
+
     def discover_server(self) -> socket.socket:
         """This function mimics the behavior of a DNS client when it tries to
         find a DNS server on the same network. The client broadcasts a discovery message
@@ -445,18 +519,15 @@ class Client(app.App):
         -------
         socket.socket
             A TCP socket connected to the server
-        None
-            Returns on failure
 
         Raises
         ------
         app.ConnectionError
-            Raises this exception if there is no connection
         """
 
         # Create an UDP socket
         u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        u.settimeout(1.0)
+        u.settimeout(5.0)
 
         # Broadcast the discovery message
         try:
@@ -469,25 +540,20 @@ class Client(app.App):
         try:
             message, _ = u.recvfrom(1024)
         except socket.timeout:
-            return None
-        util.print_message(message)
+            raise app.ConnectionError('Connection timed out.')
 
         # Extract the acknowledgement message
-        e, _, _, addr = util.extract(message)
+        try:
+            e, _, _, addr = util.extract(message)
+        except Exception:
+            # Catch exception here because we are broadcasting, there might be other broadcast
+            # messages that intefere with our protocol.
+            raise app.ConnectionError('Unknown error')
+        u.close()
 
         if e == '000':
-            # The UDP socket is completed
-            u.close()
-
-            # Create new TCP connection using the extracted server address
-            t = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            try:
-                t.connect((addr, self.SERVER_PORT))
-                return t
-            except ConnectionRefusedError:
-                return None
-        else:
-            return None
+            return self.connect(addr)
+        raise app.ConnectionError('Unknown error')
 
     def test(self):
         data = ''
