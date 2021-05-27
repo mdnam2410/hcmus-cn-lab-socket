@@ -453,7 +453,7 @@ class Client(app.App):
         else:
             num_result, weather_info = result.split('\n', 1)
             if num_result == '0':
-                print('0')
+                self.f_forecast.t_forecast.add_row(('No data',))
             else:
                 for d in weather_info.splitlines():
                     _, _, _, day, weather_description, min_degree, max_degree, precipitation = d.split(',')
