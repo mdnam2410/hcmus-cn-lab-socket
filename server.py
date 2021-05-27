@@ -132,7 +132,7 @@ class Server(app.App):
                         conn.send(util.package('000', '', ''))
                     
                     with self.lock:
-                        self.main_window.f_stat.inc_totalconnections()
+                        self.main_window.f_stat.inc_activeconnections()
 
                     # Start a thread for each accepted client
                     thread = threading.Thread(target=self.slave, args=(conn,))
@@ -188,7 +188,7 @@ class Server(app.App):
         except app.ConnectionError:
             with self.lock:
                 if self.main_window.is_alive():
-                    self.main_window.f_stat.dec_totalconnections()
+                    self.main_window.f_stat.dec_activeconnections()
                     if self.current_thread_has_user_logged_in():
                         self.main_window.f_stat.dec_activeusers()
 

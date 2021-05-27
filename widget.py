@@ -412,21 +412,21 @@ class Statistics(ttk.Frame):
         super().__init__(master)
         self.master = master
 
-        self.v_totalconnections = tk.IntVar(value=0)
+        self.v_activeconnections = tk.IntVar(value=0)
         self.v_activeusers = tk.IntVar(value=0)
         self.v_requestsmade = tk.IntVar(value=0)
 
-        self.l_totalconnections = ttk.Label(self, textvariable=self.v_totalconnections, **BOLD12)
+        self.l_activeconnections = ttk.Label(self, textvariable=self.v_activeconnections, **BOLD12)
         self.l_activeusers = ttk.Label(self, textvariable=self.v_activeusers, **BOLD12)
         self.l_requestsmade = ttk.Label(self, textvariable=self.v_requestsmade, **BOLD12)
 
         self.display()
 
-    def inc_totalconnections(self):
-        self.v_totalconnections.set(self.v_totalconnections.get() + 1)
+    def inc_activeconnections(self):
+        self.v_activeconnections.set(self.v_activeconnections.get() + 1)
 
-    def dec_totalconnections(self):
-        self.v_totalconnections.set(self.v_totalconnections.get() - 1)
+    def dec_activeconnections(self):
+        self.v_activeconnections.set(self.v_activeconnections.get() - 1)
 
     def inc_activeusers(self):
         self.v_activeusers.set(self.v_activeusers.get() + 1)
@@ -444,8 +444,8 @@ class Statistics(ttk.Frame):
         for i in range(0, 2):
             self.columnconfigure(i, weight=1)
 
-        ttk.Label(self, text='Total Connections').grid(row=0, column=0, columnspan=2)
-        self.l_totalconnections.grid(row=1, column=0, columnspan=2)
+        ttk.Label(self, text='Active Connections').grid(row=0, column=0, columnspan=2)
+        self.l_activeconnections.grid(row=1, column=0, columnspan=2)
         ttk.Label(self, text='Active Users').grid(row=2, column=0)
         self.l_activeusers.grid(row=3, column=0)
         ttk.Label(self, text='Requests Made').grid(row=2, column=1)
