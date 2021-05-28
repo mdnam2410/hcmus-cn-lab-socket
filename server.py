@@ -7,13 +7,23 @@ import database
 import util
 import widget
 
+def get_ip_address():
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	try:
+		s.connect(('8.8.8.8', 80))
+		a = s.getsockname()[0]
+		s.close()
+		return a
+	except Exception:
+		raise app.ConnectionError('Unable to get IP address')
 
 class Server(app.App):
     def __init__(self):
         super().__init__()
 
         self.DATABASE_PATH = 'db/weather.db'
-        self.SERVER_ADDRESS = socket.gethostbyname(socket.gethostname())
+        # self.SERVER_ADDRESS = '127.0.1.1'
+        self.SERVER_ADDRESS = get_ip_address()
         self.MAX_CLIENT_THREADS = 2
 
         # Dictionary ranslating status codes to status messages
