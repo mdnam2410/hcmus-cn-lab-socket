@@ -22,12 +22,11 @@ class Server(app.App):
         super().__init__()
 
         self.DATABASE_PATH = 'db/weather.db'
-        self.SERVER_ADDRESS = '127.0.1.1'
-        #self.SERVER_ADDRESS = get_ip_address()
+        self.SERVER_ADDRESS = get_ip_address()
         self.MAX_CLIENT_THREADS = 2
 
-        # Dictionary ranslating status codes to status messages
-        self.status_messages = {
+        # Dictionary translating status codes to status messages
+        self.STATUS_MESSAGES = {
             '000': 'OK',
             '001': 'Reached maximum client',
             '100': 'Username or password not found',
@@ -36,12 +35,12 @@ class Server(app.App):
             '103': 'Already logged out',
             '104': 'Not admin',
             '300': 'Permission denied',
-            '301': 'Error in adding city'
+            '301': 'Could not add city',
+            '302': 'Could not update weather information'
         }
 
         # Dictionary translating from command to the corresponding handle methods
-        self.requests = {
-            'test': self.test,
+        self.REQUESTS = {
             'login': self.request_login,
             'signup': self.request_signup,
             'logout': self.request_logout,
@@ -182,10 +181,10 @@ class Server(app.App):
                     self.update_request_statistics(conn, command)
 
                     # Do the request
-                    t = self.requests[command](command_type, data)
+                    t = self.REQUESTS[command](command_type, data)
 
                     # Response
-                    response = util.package(t[0], self.status_messages[t[0]], t[1])
+                    response = util.package(t[0], self.STATUS_MESSAGES[t[0]], t[1])
                     conn.send(response)
 
         # Connection to client is terminated    
@@ -228,6 +227,21 @@ class Server(app.App):
                 )
 
     def request_connect(self, conn: socket.socket):
+        """Verify connection request from clients. In particular, approve or reject the
+        client connection based on the number of clients currently serving.
+
+        Parameters
+        ----------
+        conn : socket.socket
+            The newly created connection to the client
+
+        Returns
+        -------
+        bool
+            True if the connection is approved. Otherwise, close the connection and
+            return False.
+        """
+
         # Setting limited time for the client to send connect request
         conn.settimeout(1.0)
 
@@ -243,10 +257,10 @@ class Server(app.App):
             with self.lock:
                 # There is enough space for the client
                 if len(self.clients) < self.MAX_CLIENT_THREADS:
-                    conn.send(util.package('000', self.status_messages['000'], ''))
+                    conn.send(util.package('000', self.STATUS_MESSAGES['000'], ''))
                     return True
                 else:
-                    conn.send(util.package('001', self.status_messages['001'], ''))
+                    conn.send(util.package('001', self.STATUS_MESSAGES['001'], ''))
                     raise app.ConnectionError('Max client reached')
 
         # Catch any exception, including socket.timeout
@@ -437,7 +451,7 @@ class Server(app.App):
                     status_code = '000' if db.add_city(s) else '301'
                 elif command_type == 'weather':
                     city_id, date, rest = request_data.split(',', 2)
-                    status_code = '000' if db.update_weather(city_id, date, tuple(rest.split(','))) else '301'
+                    status_code = '000' if db.update_weather(city_id, date, tuple(rest.split(','))) else '302'
 
         return (status_code, response_data)
 
