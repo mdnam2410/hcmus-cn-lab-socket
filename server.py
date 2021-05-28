@@ -22,8 +22,8 @@ class Server(app.App):
         super().__init__()
 
         self.DATABASE_PATH = 'db/weather.db'
-        # self.SERVER_ADDRESS = '127.0.1.1'
-        self.SERVER_ADDRESS = get_ip_address()
+        self.SERVER_ADDRESS = '127.0.1.1'
+        #self.SERVER_ADDRESS = get_ip_address()
         self.MAX_CLIENT_THREADS = 2
 
         # Dictionary ranslating status codes to status messages
@@ -131,15 +131,9 @@ class Server(app.App):
                     # Accept connection from clients
                     conn, _ = self.main_socket.accept()
 
-                    # Reached maximum connection allowed
-                    if len(self.clients) == self.MAX_CLIENT_THREADS:
-                        # Notify the client that the maximum has reached
-                        conn.send(util.package('001', self.status_messages['001'], ''))
-                        conn.close()
+                    # Accept the client for communication or not
+                    if not self.request_connect(conn):
                         continue
-                    else:
-                        # Otherwise, accept the client
-                        conn.send(util.package('000', '', ''))
                     
                     with self.lock:
                         self.main_window.f_stat.inc_activeconnections()
@@ -232,6 +226,33 @@ class Server(app.App):
                     util.package('000', '', self.SERVER_ADDRESS),
                     ('255.255.255.255', client_connection[1])
                 )
+
+    def request_connect(self, conn: socket.socket):
+        # Setting limited time for the client to send connect request
+        conn.settimeout(1.0)
+
+        try:
+            # Verify the connect message
+            command, *_ = util.extract(self.receive_from(conn))
+            if command != 'connect':
+                conn.close()
+                raise app.ConnectionError('Not a connect request')
+
+            # Reset the timeout for future use
+            conn.settimeout(None)
+            with self.lock:
+                # There is enough space for the client
+                if len(self.clients) < self.MAX_CLIENT_THREADS:
+                    conn.send(util.package('000', self.status_messages['000'], ''))
+                    return True
+                else:
+                    conn.send(util.package('001', self.status_messages['001'], ''))
+                    raise app.ConnectionError('Max client reached')
+
+        # Catch any exception, including socket.timeout
+        except Exception:
+            conn.close()
+            return False
 
     def request_login(self, command_type, request_data):
         """Handle the login command
