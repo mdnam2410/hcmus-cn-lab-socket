@@ -33,22 +33,17 @@ class Client(app.App):
         # The root window
         self.root = root
 
+        # Setting style
         self.style = Style(theme='lumen')
-
-        # # Find and try to connect to the server
-        # self.main_socket = self.discover_server()
-        # if self.main_socket is None:
-        #     raise app.ConnectionError('Unable to connect to server')
-        
-        # # Check if the maximum number of clients the server can serve is reached
-        # status_code, status_message, _, _ = util.extract(self.receive())
-        # if status_code != '000':
-        #     self.main_socket.close()
-        #     raise app.ConnectionError(status_message)
 
         # User identity
         self.username = ''
         self.name = ''
+
+        # tkinter's events
+        self.BUTTON_1 = '<Button-1>'
+        self.RETURN = '<Return>'
+        self.COMBOBOX_SELECTED = '<<ComboboxSelected>>'
 
         # Create all the windows and widgets
         self.create_gui()
@@ -75,7 +70,7 @@ class Client(app.App):
         # Bind commands
         self.w_connecttoserver.protocol('WM_DELETE_WINDOW', self.command_wconnecttoserver_onclosing)
         self.f_connecttoserver.b_connect.configure(command=self.command_wconnecttoserver_bconnect)
-        self.f_connecttoserver.l_autoconnect.bind('<Button-1>', self.command_wconnnecttoserver_lautoconnect)
+        self.f_connecttoserver.l_autoconnect.bind(self.BUTTON_1, self.command_wconnnecttoserver_lautoconnect)
 
     def create_login_window(self):
         # Create the Login window as toplevel of root
@@ -87,8 +82,8 @@ class Client(app.App):
 
         # Bind commands
         self.f_login.b_login.configure(command=self.command_wlogin_blogin)
-        self.f_login.l_adminlogin.bind('<Button-1>', self.command_wlogin_ladminlogin)
-        self.f_login.l_signup.bind('<Button-1>', self.command_wlogin_lsignup)
+        self.f_login.l_adminlogin.bind(self.BUTTON_1, self.command_wlogin_ladminlogin)
+        self.f_login.l_signup.bind(self.BUTTON_1, self.command_wlogin_lsignup)
         self.w_login.protocol('WM_DELETE_WINDOW', self.command_wlogin_onclosing)
 
         # Display
@@ -105,7 +100,7 @@ class Client(app.App):
         # Bind commands
         self.w_signup.protocol('WM_DELETE_WINDOW', self.command_wsignup_onclosing)
         self.f_signup.b_signup.configure(command=self.command_wsignup_bsignup)
-        self.f_signup.l_back.bind('<Button-1>', self.command_wsignup_lback)
+        self.f_signup.l_back.bind(self.BUTTON_1, self.command_wsignup_lback)
 
         # Display
         self.f_signup.pack()
@@ -124,9 +119,9 @@ class Client(app.App):
 
         # -------- The Forecast frame --------
         self.f_forecast = widget.Forecast(self.root)
-        self.f_forecast.c_searchbar.bind('<Return>', self.command_fforecast_csearchbar_onreturn)
+        self.f_forecast.c_searchbar.bind(self.RETURN, self.command_fforecast_csearchbar_onreturn)
         self.f_forecast.c_searchbar.bind(
-            '<<ComboboxSelected>>',
+            self.COMBOBOX_SELECTED,
             self.command_fforecast_csearchbar_onselect
         )
     
@@ -432,7 +427,7 @@ class Client(app.App):
                     self.f_forecast.recent_cities[v] = city_id
 
                 self.f_forecast.c_searchbar['values'] = list(self.f_forecast.recent_cities.keys())
-            self.f_forecast.c_searchbar.event_generate('<Button-1>')
+            self.f_forecast.c_searchbar.event_generate(self.BUTTON_1)
 
     def command_fforecast_csearchbar_onselect(self, event):
         """Actions taken when selecting an option in the dropdown list of the Search combobox
