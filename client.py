@@ -485,7 +485,7 @@ class Client(app.App):
             s.settimeout(5.0)
             s.connect((server_address, self.SERVER_PORT))
 
-            s.send(util.package('connct', '', ''))
+            s.send(util.package('connect', '', ''))
             status_code, status_message, _, _ = util.extract(self.receive_from(s))
             if status_code != '000':
                 s.close()
