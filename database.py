@@ -1,6 +1,5 @@
 import datetime
 import sqlite3
-import time
 
 class DatabaseConnectionError(Exception):
     pass
